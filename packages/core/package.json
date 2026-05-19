@@ -1,6 +1,6 @@
 {
   "name": "xlxz-markdown-editor",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Obsidian-quality Markdown live preview editor — microkernel architecture with pluggable extensions",
   "type": "module",
   "license": "UNLICENSED",
