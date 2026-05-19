@@ -406,12 +406,23 @@ export function createEditor(
   });
   view.setState(fullState);
 
+  // ── 强制语法树重建（解决标签等增量解析不及时的问题） ──
+  (function forceRebuild() {
+    const { syntaxTree, Transaction } = (window as any).__cm6;
+    view.dispatch({ annotations: Transaction.addToHistory.of(false) });
+    const tree = syntaxTree(view.state);
+    if (tree.length < view.state.doc.length) {
+      setTimeout(forceRebuild, 50);
+    }
+  })();
+
   // ── 中文括号自动转换：【【→[[, 】】→]] ──
   (function setupExpandText() {
     const { EditorView: EV, StateEffect } = (window as any).__cm6;
     const rules = [
       { regex: /(！)?【【$/, replace: (m: RegExpMatchArray) => m[1] ? '![[' : '[[' },
       { regex: /】】$/, replace: () => ']]' },
+      { regex: /···$/, replace: () => '```' },
     ];
     const listener = EV.updateListener.of((update: any) => {
       if (!update.docChanged) return;

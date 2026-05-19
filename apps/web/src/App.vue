@@ -9,8 +9,10 @@ const status = ref<{ text: string; state: 'loading' | 'ok' | 'err' }>({
   text: 'Loading Obsidian engine...',
   state: 'loading',
 });
+const callbackLog = ref('');
 
 let editor: EditorInstance | null = null;
+let callbackTimer: ReturnType<typeof setTimeout> | null = null;
 
 function checkRuntime(): boolean {
   const w = window as any;
@@ -25,6 +27,15 @@ function checkRuntime(): boolean {
   }
   console.log('[boot] Obsidian runtime ready:', Object.keys(w.__cm6).join(', '));
   return true;
+}
+
+function setCallbackLog(msg: string) {
+  if (callbackTimer) clearTimeout(callbackTimer);
+  callbackLog.value = msg;
+  callbackTimer = setTimeout(() => {
+    callbackLog.value = '';
+    callbackTimer = null;
+  }, 3000);
 }
 
 function tryMount(attempt: number = 0) {
@@ -50,9 +61,15 @@ function tryMount(attempt: number = 0) {
       theme: 'dark',
       onChange(doc: string) {
         console.log(`[demo] doc changed, length=${doc.length}`);
+        setCallbackLog('onChange: ' + doc.length + ' chars');
       },
       onSave(doc: string) {
         console.log('[demo] save requested, length=', doc.length);
+        setCallbackLog('onSave: ' + doc.length + ' chars');
+      },
+      onLinkClick(linktext: string) {
+        console.log('[demo] link clicked:', linktext);
+        setCallbackLog('onLinkClick: ' + linktext);
       },
     });
 
@@ -72,6 +89,7 @@ onMounted(() => {
   <div id="toolbar">
     <span>xlxz-markdown-editor</span>
     <span class="status" :class="status.state">{{ status.text }}</span>
+    <span class="callback-log">{{ callbackLog }}</span>
   </div>
   <div class="view-content">
     <div
@@ -108,6 +126,11 @@ body {
 #toolbar .status { margin-left: auto; }
 #toolbar .status.ok { color: var(--text-success, #4caf50); }
 #toolbar .status.err { color: var(--text-error, #f44336); }
+#toolbar .callback-log {
+  font-size: 12px;
+  color: var(--text-accent, #7f6df2);
+  margin-left: 8px;
+}
 
 .view-content {
   flex: 1;
@@ -118,5 +141,9 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
+}
+
+.theme-dark .markdown-source-view.mod-cm6 .cm-line.HyperMD-codeblock {
+  background-color: #1a1a2e;
 }
 </style>
