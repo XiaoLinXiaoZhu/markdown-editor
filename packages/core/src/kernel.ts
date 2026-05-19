@@ -213,8 +213,12 @@ export function createEditor(
 
   // ── 构建基础 State ──
 
-  const { keymap, indentUnit } = (window as any);
-  const { lineNumbers, activeLineGutter, highlightActiveLineGutter } = (window as any);
+  const { keymap } = (window as any).__cm6;
+  const __lineNumbers = (window as any).__lineNumbers;
+  const __activeLineGutter = (window as any).__activeLineGutter;
+  const __highlightActiveLineGutter = (window as any).__highlightActiveLineGutter;
+  const __indentUnit = (window as any).__indentUnit;
+  const __indentGuide = (window as any).__indentGuide;
   const { base: ZB } = (window as any).__compartments;
 
   const stateExtensions: any[] = [];
@@ -226,18 +230,18 @@ export function createEditor(
   // Tab 配置
   const indent = opts.useTab ? '\t' : ' '.repeat(Math.min(Math.max(opts.tabSize!, 2), 4));
   stateExtensions.push(EditorState.tabSize.of(opts.tabSize));
-  if (indentUnit) stateExtensions.push((window as any).__indentUnit.of(indent));
+  if (__indentUnit) stateExtensions.push(__indentUnit.of(indent));
 
   // 行号
-  if (opts.showLineNumber && lineNumbers) {
-    stateExtensions.push(lineNumbers({ fixed: false }));
-    if (activeLineGutter) stateExtensions.push(activeLineGutter);
-    if (highlightActiveLineGutter) stateExtensions.push(highlightActiveLineGutter());
+  if (opts.showLineNumber && __lineNumbers) {
+    stateExtensions.push(__lineNumbers({ fixed: false }));
+    if (__activeLineGutter) stateExtensions.push(__activeLineGutter);
+    if (__highlightActiveLineGutter) stateExtensions.push(__highlightActiveLineGutter());
   }
 
   // 缩进指引
-  if (opts.showIndentGuide && (window as any).__indentGuide) {
-    stateExtensions.push((window as any).__indentGuide);
+  if (opts.showIndentGuide && __indentGuide) {
+    stateExtensions.push(__indentGuide);
   }
 
   // 挂载语言
@@ -278,7 +282,11 @@ export function createEditor(
 
   // 折叠支持
   if (opts.foldHeading || opts.foldIndent) {
-    const { foldGutter, foldExtensions, foldHeading, foldIndent, foldEffect } = (window as any);
+    const foldGutter = (window as any).__foldGutter;
+    const foldExtensions = (window as any).__foldExtensions;
+    const foldHeading = (window as any).__foldHeading;
+    const foldIndent = (window as any).__foldIndent;
+    const foldEffect = (window as any).__foldEffect;
     if (foldGutter && foldExtensions) {
       editorEl.classList.add('is-folding');
       stateExtensions.push(foldGutter());

@@ -12,8 +12,36 @@ const status = ref<{ text: string; state: 'loading' | 'ok' | 'err' }>({
 
 let editor: EditorInstance | null = null;
 
-onMounted(() => {
-  if (!editorContainer.value) return;
+function checkRuntime(): boolean {
+  const w = window as any;
+  const missing: string[] = [];
+  if (!w.__cm6) missing.push('__cm6');
+  if (!w.__stateFields) missing.push('__stateFields');
+  if (!w.__closeBrackets) missing.push('__closeBrackets');
+  if (!w.__compartments) missing.push('__compartments');
+  if (missing.length > 0) {
+    console.warn('[boot] Obsidian runtime not ready, missing:', missing.join(', '));
+    return false;
+  }
+  console.log('[boot] Obsidian runtime ready:', Object.keys(w.__cm6).join(', '));
+  return true;
+}
+
+function tryMount(attempt: number = 0) {
+  if (!editorContainer.value) {
+    status.value = { text: 'Container not found', state: 'err' };
+    return;
+  }
+
+  if (!checkRuntime()) {
+    if (attempt < 50) {
+      status.value = { text: `Waiting for Obsidian runtime... (${attempt + 1}/50)`, state: 'loading' };
+      setTimeout(() => tryMount(attempt + 1), 100);
+    } else {
+      status.value = { text: 'Obsidian runtime failed to load after 5s', state: 'err' };
+    }
+    return;
+  }
 
   try {
     editor = createEditor(editorContainer.value, {
@@ -33,6 +61,10 @@ onMounted(() => {
     console.error('Editor creation error:', e);
     status.value = { text: e.message, state: 'err' };
   }
+}
+
+onMounted(() => {
+  tryMount();
 });
 </script>
 
@@ -84,6 +116,8 @@ body {
 }
 .view-content > .markdown-source-view {
   flex: 1;
+  min-height: 0;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
 }

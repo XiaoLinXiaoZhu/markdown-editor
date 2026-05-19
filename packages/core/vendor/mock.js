@@ -1,4 +1,7 @@
+console.log('[vendor] mock.js starting...');
+window.addEventListener('error', function(e) { console.error('[vendor] GLOBAL ERROR:', e.message, 'at', e.filename, ':', e.lineno); });
 // Browser global mocks required by Obsidian's app.js
+console.log('[vendor] mock.js executing...');
 // Load i18n translations
 window.OBSIDIAN_DEFAULT_I18N = {};
 i18next.init({ fallbackLng: 'en', ns: ['app'], defaultNS: 'app', initImmediate: false, interpolation: { escapeValue: false } });
@@ -22,3 +25,4 @@ window.process = { platform: 'win32', env: {}, versions: { electron: '28.0.0' },
 window.ready = function() {};
 
 if (!Event.prototype.detach) Event.prototype.detach = function() {};
+console.log('[vendor] mock.js done, __cm6:', typeof window.__cm6);
