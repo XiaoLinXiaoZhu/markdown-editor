@@ -6,7 +6,7 @@
  * 2. 管理插件注册表
  * 3. 暴露文档读写接口
  */
-import type { EditorBackend, EditorOptions, EditorInstance, EditorPlugin, PluginContext, SuggestConfig } from './types.js';
+import type { EditorBackend, EditorOptions, EditorInstance, EditorPlugin, PluginContext, SuggestConfig, SuggestItem } from './types.js';
 
 // 默认后端实现
 const defaultBackend: Required<EditorBackend> = {
@@ -548,6 +548,93 @@ export function createEditor(
     }
   });
 
+  // ── 附件处理：粘贴图片 / 拖拽文件 ──
+  const { EditorView: EV2 } = (window as any).__cm6;
+  view.dispatch({
+    effects: (window as any).__cm6.StateEffect.appendConfig.of(
+      EV2.domEventHandlers({
+        dragover(e: DragEvent) {
+          e.preventDefault();
+          editorEl.classList.add('is-drop-target');
+        },
+        dragleave(_e: DragEvent) {
+          editorEl.classList.remove('is-drop-target');
+        },
+        async drop(e: DragEvent) {
+          editorEl.classList.remove('is-drop-target');
+          const files = e.dataTransfer?.files;
+          if (!files || files.length === 0) return;
+          e.preventDefault();
+          for (const file of Array.from(files)) {
+            const buf = await file.arrayBuffer();
+            const savedPath = await be.saveAttachment(file.name, buf);
+            if (savedPath) {
+              const insert = file.type.startsWith('image/') ? '![' + savedPath + '](' + savedPath + ')' : '[[' + savedPath + ']]';
+              const { from, to } = view.state.selection.main;
+              view.dispatch({
+                changes: { from, to, insert },
+                selection: { anchor: from + insert.length },
+                userEvent: 'input.drop',
+              });
+            }
+          }
+        },
+        paste(e: ClipboardEvent) {
+          const items = e.clipboardData?.items;
+          if (items) {
+            for (const item of Array.from(items)) {
+              if (item.type.startsWith('image/')) {
+                e.preventDefault();
+                const blob = item.getAsFile();
+                if (!blob) return;
+                blob.arrayBuffer().then(async (buf) => {
+                  const name = 'paste-' + Date.now() + '.' + (blob.type.split('/')[1] || 'png');
+                  const savedPath = await be.saveAttachment(name, buf);
+                  if (savedPath) {
+                    const insert = '![' + savedPath + '](' + savedPath + ')';
+                    const { from, to } = view.state.selection.main;
+                    view.dispatch({
+                      changes: { from, to, insert },
+                      selection: { anchor: from + insert.length },
+                      userEvent: 'input.paste',
+                    });
+                  }
+                });
+                return;
+              }
+            }
+          }
+          // HTML paste → Markdown
+          const html = e.clipboardData?.getData('text/html');
+          if (!html) return;
+          if (!(window as any).TurndownService) return;
+          try {
+            const td = new (window as any).TurndownService({ headingStyle: 'atx', codeBlockStyle: 'fenced' });
+            const md = td.turndown(html);
+            if (!md || !md.trim()) return;
+            e.preventDefault();
+            const { from, to } = view.state.selection.main;
+            view.dispatch({
+              changes: { from, to, insert: md },
+              selection: { anchor: from + md.length },
+              userEvent: 'input.paste',
+            });
+          } catch (err) {
+            console.warn('Paste conversion failed:', err);
+          }
+        },
+      })
+    ),
+  });
+
+  // ── 工具函数 ──
+
+  function escapeHtml(str: string): string {
+    const div = document.createElement('div');
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
+  }
+
   // ── 返回实例 ──
 
   const instance: EditorInstance = {
@@ -572,9 +659,120 @@ export function createEditor(
     use,
     unuse,
     registerSuggest(config: SuggestConfig) {
-      // TODO: 阶段 2 实现
-      console.warn('registerSuggest not yet implemented');
-      return () => {};
+      const { EditorView: EV, StateEffect } = (window as any).__cm6;
+      let suggestEl: HTMLElement | null = null;
+      let suggestItems: SuggestItem[] = [];
+      let selectedIdx = 0;
+      let triggerFrom = -1;
+      let active = true;
+
+      function createSuggestEl() {
+        if (suggestEl) return suggestEl;
+        suggestEl = document.createElement('div');
+        suggestEl.className = 'xlxz-suggest';
+        suggestEl.style.cssText = 'position:fixed;z-index:1000;background:var(--background-secondary,#252526);border:1px solid var(--background-modifier-border,#454545);border-radius:4px;max-height:200px;overflow-y:auto;min-width:200px;box-shadow:0 2px 8px rgba(0,0,0,0.3);font-size:13px;display:none;';
+        document.body.appendChild(suggestEl);
+        suggestEl.addEventListener('mousedown', (e) => e.preventDefault());
+        suggestEl.addEventListener('click', (e) => {
+          const itemEl = (e.target as HTMLElement).closest('[data-idx]');
+          if (itemEl) acceptSuggestion(parseInt(itemEl.getAttribute('data-idx')!));
+        });
+        return suggestEl;
+      }
+
+      function showSuggest(coords: { left: number; bottom: number }, items: SuggestItem[]) {
+        const el = createSuggestEl();
+        suggestItems = items;
+        selectedIdx = 0;
+        el.innerHTML = items.map((item, i) =>
+          `<div data-idx="${i}" style="padding:4px 8px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${i === 0 ? 'background:var(--background-modifier-hover,#04395e);' : ''}">${escapeHtml(item.label)}</div>`
+        ).join('');
+        el.style.left = coords.left + 'px';
+        el.style.top = (coords.bottom + 2) + 'px';
+        el.style.display = 'block';
+      }
+
+      function hideSuggest() {
+        if (suggestEl) suggestEl.style.display = 'none';
+        suggestItems = [];
+        triggerFrom = -1;
+      }
+
+      function updateSelection(idx: number) {
+        if (!suggestEl) return;
+        selectedIdx = Math.max(0, Math.min(idx, suggestItems.length - 1));
+        const items = suggestEl.querySelectorAll('[data-idx]');
+        items.forEach((el, i) => {
+          (el as HTMLElement).style.background = i === selectedIdx ? 'var(--background-modifier-hover,#04395e)' : '';
+        });
+        items[selectedIdx]?.scrollIntoView({ block: 'nearest' });
+      }
+
+      function acceptSuggestion(idx: number) {
+        if (idx < 0 || idx >= suggestItems.length) return;
+        const item = suggestItems[idx];
+        const cursor = view.state.selection.main.head;
+        const insertText = item.insertText + (config.suffix || '');
+        view.dispatch({
+          changes: { from: triggerFrom, to: cursor, insert: insertText },
+          selection: { anchor: triggerFrom + insertText.length },
+          userEvent: 'input.type',
+        });
+        hideSuggest();
+        view.focus();
+        if (config.onAccept) config.onAccept(item);
+      }
+
+      const listener = EV.updateListener.of((update: any) => {
+        if (!active) return;
+        if (!update.docChanged && !update.selectionSet) return;
+        const state = update.state;
+        const cursor = state.selection.main.head;
+        const line = state.doc.lineAt(cursor);
+        const textBefore = line.text.slice(0, cursor - line.from);
+        const match = textBefore.match(config.trigger);
+        if (!match) { hideSuggest(); return; }
+        const query = match[1] || '';
+        triggerFrom = cursor - query.length;
+        const result = config.getSuggestions(query);
+        const handleItems = (items: SuggestItem[]) => {
+          if (items.length === 0) { hideSuggest(); return; }
+          let coords = update.view.coordsAtPos(cursor);
+          if (!coords) {
+            const sel = window.getSelection();
+            if (sel && sel.rangeCount > 0) {
+              const rect = sel.getRangeAt(0).getBoundingClientRect();
+              if (rect.height > 0) coords = { left: rect.left, bottom: rect.bottom };
+            }
+            if (!coords) {
+              const cursorEl = update.view.dom.querySelector('.cm-cursor');
+              if (cursorEl) { const r = cursorEl.getBoundingClientRect(); coords = { left: r.left, bottom: r.bottom }; }
+              else { const r = update.view.dom.getBoundingClientRect(); coords = { left: r.left + 50, bottom: r.top + 30 }; }
+            }
+          }
+          showSuggest(coords, items);
+        };
+        if (result instanceof Promise) { result.then(handleItems); }
+        else { handleItems(result); }
+      });
+
+      const suggestKeymap = EV.domEventHandlers({
+        keydown(e: KeyboardEvent) {
+          if (!suggestEl || suggestEl.style.display === 'none') return false;
+          if (e.key === 'ArrowDown') { e.preventDefault(); updateSelection(selectedIdx + 1); return true; }
+          else if (e.key === 'ArrowUp') { e.preventDefault(); updateSelection(selectedIdx - 1); return true; }
+          else if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); acceptSuggestion(selectedIdx); return true; }
+          else if (e.key === 'Escape') { e.preventDefault(); hideSuggest(); return true; }
+          return false;
+        },
+      });
+
+      view.dispatch({ effects: StateEffect.appendConfig.of([listener, suggestKeymap]) });
+
+      return () => {
+        active = false;
+        if (suggestEl) { suggestEl.remove(); suggestEl = null; }
+      };
     },
   };
 
