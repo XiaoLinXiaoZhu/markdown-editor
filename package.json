@@ -1,0 +1,10 @@
+{
+  "name": "xlxz-markdown-editor-monorepo",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/core",
+    "apps/web"
+  ]
+}
