@@ -514,17 +514,34 @@ export function createEditor(
       }
       const extParent = underline.closest('.cm-link');
       if (extParent) {
+        e.preventDefault();
+        e.stopPropagation();
+        // Try DOM first
         const urlEl = extParent.parentElement?.querySelector('.cm-url, .cm-string') as HTMLElement;
+        let url = '';
         if (urlEl) {
-          const url = urlEl.textContent?.replace(/^\(|\)$/g, '') || '';
-          if (/^https?:/.test(url)) {
-            e.preventDefault();
-            e.stopPropagation();
-            if (opts.onExternalLinkClick) {
-              opts.onExternalLinkClick(url);
-            } else {
-              window.open(url, '_blank');
+          url = urlEl.textContent?.replace(/^\(|\)$/g, '') || '';
+        }
+        // Fallback: extract from markdown source
+        if (!url || !/^https?:/.test(url)) {
+          const pos = view.posAtDOM(underline);
+          const line = view.state.doc.lineAt(pos);
+          const linkMatch = line.text.match(/\[([^\]]*)\]\(([^)]+)\)/g);
+          if (linkMatch) {
+            for (const m of linkMatch) {
+              const urlMatch = m.match(/\(([^)]+)\)/);
+              if (urlMatch && /^https?:/.test(urlMatch[1])) {
+                url = urlMatch[1];
+                break;
+              }
             }
+          }
+        }
+        if (/^https?:/.test(url)) {
+          if (opts.onExternalLinkClick) {
+            opts.onExternalLinkClick(url);
+          } else {
+            window.open(url, '_blank');
           }
         }
       }
