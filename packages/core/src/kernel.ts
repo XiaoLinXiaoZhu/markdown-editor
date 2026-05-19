@@ -756,16 +756,49 @@ export function createEditor(
         else { handleItems(result); }
       });
 
-      const suggestKeymap = EV.domEventHandlers({
-        keydown(e: KeyboardEvent) {
-          if (!suggestEl || suggestEl.style.display === 'none') return false;
-          if (e.key === 'ArrowDown') { e.preventDefault(); updateSelection(selectedIdx + 1); return true; }
-          else if (e.key === 'ArrowUp') { e.preventDefault(); updateSelection(selectedIdx - 1); return true; }
-          else if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); acceptSuggestion(selectedIdx); return true; }
-          else if (e.key === 'Escape') { e.preventDefault(); hideSuggest(); return true; }
-          return false;
+      const { Prec, keymap: km } = (window as any).__cm6;
+      const suggestKeymap = Prec.highest(km.of([
+        {
+          key: 'ArrowDown',
+          run() {
+            if (!suggestEl || suggestEl.style.display === 'none') return false;
+            updateSelection(selectedIdx + 1);
+            return true;
+          },
         },
-      });
+        {
+          key: 'ArrowUp',
+          run() {
+            if (!suggestEl || suggestEl.style.display === 'none') return false;
+            updateSelection(selectedIdx - 1);
+            return true;
+          },
+        },
+        {
+          key: 'Enter',
+          run() {
+            if (!suggestEl || suggestEl.style.display === 'none') return false;
+            acceptSuggestion(selectedIdx);
+            return true;
+          },
+        },
+        {
+          key: 'Tab',
+          run() {
+            if (!suggestEl || suggestEl.style.display === 'none') return false;
+            acceptSuggestion(selectedIdx);
+            return true;
+          },
+        },
+        {
+          key: 'Escape',
+          run() {
+            if (!suggestEl || suggestEl.style.display === 'none') return false;
+            hideSuggest();
+            return true;
+          },
+        },
+      ]));
 
       view.dispatch({ effects: StateEffect.appendConfig.of([listener, suggestKeymap]) });
 
