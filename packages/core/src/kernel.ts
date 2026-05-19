@@ -214,6 +214,10 @@ export function createEditor(
   // ── 构建基础 State ──
 
   const { keymap } = (window as any).__cm6;
+  const __listRegex = (window as any).__listRegex;
+  const __indentMore = (window as any).__commands?.indentMore;
+  const __indentLess = (window as any).__commands?.indentLess;
+  const __newlineAndIndent = (window as any).__commands?.newlineAndIndent;
   const __lineNumbers = (window as any).__lineNumbers;
   const __activeLineGutter = (window as any).__activeLineGutter;
   const __highlightActiveLineGutter = (window as any).__highlightActiveLineGutter;
@@ -253,8 +257,74 @@ export function createEditor(
     stateExtensions.push((window as any).__hangingIndent);
   }
 
-  // 基础 keymap
+  // 完整 keymap：列表续行 + Tab缩进 + 保存
   stateExtensions.push(keymap.of([
+    {
+      key: 'Enter',
+      run(v: any) {
+        if (!__listRegex) return false;
+        const state = v.state;
+        const { head } = state.selection.main;
+        const line = state.doc.lineAt(head);
+        const match = __listRegex.exec(line.text);
+        if (!match) return false;
+        const prefix = match[0];
+        const blockquote = match[1] || '';
+        const listMarker = match[2] || '';
+
+        if (!blockquote && !listMarker) return false;
+
+        // Empty list item: remove the marker
+        if (line.text.slice(prefix.length).trim() === '') {
+          v.dispatch({
+            changes: { from: line.from, to: line.to, insert: '' },
+            userEvent: 'input.type',
+          });
+          return true;
+        }
+
+        if (listMarker) {
+          let newMarker = listMarker;
+          const ordNum = match[4];
+          if (ordNum) {
+            const sep = match[5];
+            newMarker = (parseInt(ordNum) + 1) + sep;
+          }
+          const checkbox = match[6] !== undefined ? '[ ] ' : '';
+          if (checkbox) newMarker = newMarker.replace(/\[.\] $/, '');
+          const insert = '\n' + blockquote + newMarker + checkbox;
+          v.dispatch({
+            changes: { from: head, insert },
+            selection: { anchor: head + insert.length },
+            userEvent: 'input.type',
+          });
+        } else {
+          const insert = '\n' + blockquote;
+          v.dispatch({
+            changes: { from: head, insert },
+            selection: { anchor: head + insert.length },
+            userEvent: 'input.type',
+          });
+        }
+        return true;
+      },
+      shift(v: any) {
+        if (__newlineAndIndent) return __newlineAndIndent(v);
+        return false;
+      },
+      preventDefault: true,
+    },
+    {
+      key: 'Tab',
+      run(v: any) {
+        if (__indentMore) return __indentMore(v);
+        return false;
+      },
+      shift(v: any) {
+        if (__indentLess) return __indentLess(v);
+        return false;
+      },
+    },
     {
       key: 'Mod-s',
       run(v: any) {
@@ -335,6 +405,120 @@ export function createEditor(
     extensions: stateExtensions,
   });
   view.setState(fullState);
+
+  // ── 中文括号自动转换：【【→[[, 】】→]] ──
+  (function setupExpandText() {
+    const { EditorView: EV, StateEffect } = (window as any).__cm6;
+    const rules = [
+      { regex: /(！)?【【$/, replace: (m: RegExpMatchArray) => m[1] ? '![[' : '[[' },
+      { regex: /】】$/, replace: () => ']]' },
+    ];
+    const listener = EV.updateListener.of((update: any) => {
+      if (!update.docChanged) return;
+      const isUserInput = update.transactions.some((tr: any) => tr.isUserEvent('input'));
+      if (!isUserInput) return;
+      const state = update.state;
+      const cursor = state.selection.main.head;
+      const line = state.doc.lineAt(cursor);
+      const textBefore = line.text.slice(0, cursor - line.from);
+      for (const rule of rules) {
+        const match = textBefore.match(rule.regex);
+        if (match) {
+          const replaceText = rule.replace(match);
+          const from = cursor - match[0].length;
+          setTimeout(() => {
+            view.dispatch({
+              changes: { from, to: cursor, insert: replaceText },
+              selection: { anchor: from + replaceText.length },
+              userEvent: 'input.type',
+            });
+          }, 0);
+          break;
+        }
+      }
+    });
+    view.dispatch({ effects: StateEffect.appendConfig.of(listener) });
+  })();
+
+  // ── 链接点击处理 ──
+  editorEl.addEventListener('click', (e: MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (!target?.closest) return;
+
+    const internalLink = target.closest('.internal-link, .cm-hmd-internal-link');
+    if (internalLink) {
+      e.preventDefault();
+      e.stopPropagation();
+      const linkText = (internalLink as HTMLElement).getAttribute('data-href')
+        || (internalLink as HTMLElement).getAttribute('href')
+        || (internalLink as HTMLElement).textContent?.trim() || '';
+      if (linkText) {
+        if (opts.onLinkClick) {
+          opts.onLinkClick(linkText, opts.filePath || '');
+        } else {
+          be.openFile(linkText);
+        }
+      }
+      return;
+    }
+
+    const externalLink = target.closest('.external-link') as HTMLElement;
+    if (externalLink) {
+      const href = externalLink.getAttribute('href') || externalLink.getAttribute('data-href') || '';
+      if (href && /^https?:|^mailto:/.test(href)) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (opts.onExternalLinkClick) {
+          opts.onExternalLinkClick(href);
+        } else {
+          window.open(href, '_blank');
+        }
+      }
+      return;
+    }
+
+    const underline = target.closest('.cm-underline') as HTMLElement;
+    if (underline) {
+      const linkParent = underline.closest('.cm-hmd-internal-link');
+      if (linkParent) {
+        e.preventDefault();
+        e.stopPropagation();
+        const pos = view.posAtDOM(underline);
+        const doc = view.state.doc.toString();
+        const before = doc.lastIndexOf('[[', pos);
+        if (before !== -1 && before >= pos - 200) {
+          const after = doc.indexOf(']]', before + 2);
+          if (after !== -1 && after < pos + 200) {
+            const content = doc.slice(before + 2, after);
+            const pipeIdx = content.indexOf('|');
+            const linkContent = pipeIdx !== -1 ? content.slice(0, pipeIdx) : content;
+            if (opts.onLinkClick) {
+              opts.onLinkClick(linkContent, opts.filePath || '');
+            } else {
+              be.openFile(linkContent);
+            }
+          }
+        }
+        return;
+      }
+      const extParent = underline.closest('.cm-link');
+      if (extParent) {
+        const urlEl = extParent.parentElement?.querySelector('.cm-url, .cm-string') as HTMLElement;
+        if (urlEl) {
+          const url = urlEl.textContent?.replace(/^\(|\)$/g, '') || '';
+          if (/^https?:/.test(url)) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (opts.onExternalLinkClick) {
+              opts.onExternalLinkClick(url);
+            } else {
+              window.open(url, '_blank');
+            }
+          }
+        }
+      }
+    }
+  });
 
   // ── 返回实例 ──
 
