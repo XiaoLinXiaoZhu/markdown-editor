@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { createEditor } from 'xlxz-markdown-editor';
-import type { EditorInstance } from 'xlxz-markdown-editor';
+import type { EditorInstance, EditorBackend } from 'xlxz-markdown-editor';
 import demoDoc from './demo-doc.md?raw';
 
 const editorContainer = ref<HTMLElement>();
@@ -12,6 +12,7 @@ const status = ref<{ text: string; state: 'loading' | 'ok' | 'err' }>({
 const callbackLog = ref('');
 
 let editor: EditorInstance | null = null;
+let suggestCleanup: (() => void) | null = null;
 let callbackTimer: ReturnType<typeof setTimeout> | null = null;
 
 function checkRuntime(): boolean {
@@ -55,6 +56,15 @@ function tryMount(attempt: number = 0) {
   }
 
   try {
+    const mockBackend: EditorBackend = {
+      async saveAttachment(name: string, data: ArrayBuffer) {
+        const blob = new Blob([data]);
+        const url = URL.createObjectURL(blob);
+        console.log('[mock] attachment saved:', name, url);
+        return url;
+      },
+    };
+
     editor = createEditor(editorContainer.value, {
       doc: demoDoc,
       filePath: 'demo.md',
@@ -71,9 +81,27 @@ function tryMount(attempt: number = 0) {
         console.log('[demo] link clicked:', linktext);
         setCallbackLog('onLinkClick: ' + linktext);
       },
-    });
+    }, mockBackend);
 
     status.value = { text: 'Live preview active', state: 'ok' };
+
+    // Register mock [[ suggest
+    suggestCleanup = editor.registerSuggest({
+      trigger: /\[\[([^\]]*)$/,
+      getSuggestions(query: string) {
+        const notes = [
+          { label: 'Getting Started', insertText: 'Getting Started' },
+          { label: 'Project Roadmap', insertText: 'Project Roadmap' },
+          { label: 'API Reference', insertText: 'API Reference' },
+          { label: 'Changelog', insertText: 'Changelog' },
+          { label: 'FAQ', insertText: 'FAQ' },
+        ];
+        if (!query) return notes;
+        const q = query.toLowerCase();
+        return notes.filter(n => n.label.toLowerCase().includes(q));
+      },
+      suffix: ']]',
+    });
   } catch (e: any) {
     console.error('Editor creation error:', e);
     status.value = { text: e.message, state: 'err' };
