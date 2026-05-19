@@ -1,0 +1,45 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+out/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temp files
+.temp/
+*.tmp
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# Bun
+bun.lock
+
+# Test coverage
+coverage/
+
+# Tauri (if generated during iNote integration)
+src-tauri/target/
+
+# Misc
+_n0n_exec_*
+*.tsbuildinfo
+
+# reference
+ref/
