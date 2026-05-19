@@ -85,12 +85,12 @@ bun run dev
 
 ## 四、允许进入阶段 1 的标准
 
-- [ ] `bun install` 零错误
-- [ ] `bun run build`（在 packages/core）零错误，`dist/` 产物存在
-- [ ] `apps/web` dev server 正常启动
-- [ ] 浏览器访问 `apps/web` 能看到空白编辑器
-- [ ] 控制台无 `__cm6 not found` 或类似运行时错误
-- [ ] 所有产出物文件（0.1-0.15）就位
+- [x] `bun install` 零错误
+- [x] `bun run build`（在 packages/core）零错误，`dist/` 产物存在
+- [x] `apps/web` dev server 正常启动
+- [x] 浏览器访问 `apps/web` 能看到空白编辑器
+- [x] 控制台无 `__cm6 not found` 或类似运行时错误
+- [x] 所有产出物文件（0.1-0.15）就位
 
 **任一标准不满足 → 不允许进入阶段 1。**
 

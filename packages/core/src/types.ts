@@ -118,6 +118,17 @@ export interface AssetLoader {
   loadScript(url: string): Promise<void>;
 }
 
+// ─── 自动加载选项 ───
+
+export interface AutoLoadOptions {
+  /** 基础路径，vendor 脚本从此路径加载，默认 '/vendor/' */
+  basePath?: string;
+  /** 是否加载 MathJax（默认 false，按需加载） */
+  math?: boolean;
+  /** 自定义脚本路径映射（覆写默认路径） */
+  overrides?: Record<string, string>;
+}
+
 // ─── 编辑器实例 ───
 
 export interface EditorInstance {

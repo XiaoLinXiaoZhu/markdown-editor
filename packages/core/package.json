@@ -19,7 +19,7 @@
     "vendor"
   ],
   "scripts": {
-    "build": "bun build src/index.ts --outfile dist/index.js --format esm --target browser --external vue && bun build src/index.ts --outfile dist/index.cjs --format cjs --target browser --external vue && tsc -p tsconfig.json --emitDeclarationOnly --declaration"
+    "build": "bun build src/index.ts --outfile dist/index.js --format esm --target browser --external vue && bun build src/index.ts --outfile dist/index.cjs --format cjs --target browser --external vue && tsc -p tsconfig.json --emitDeclarationOnly --declaration && rm -f dist/kernel.d.ts dist/types.d.ts"
   },
   "peerDependencies": {
     "vue": "^3.5.0"

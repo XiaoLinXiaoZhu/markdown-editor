@@ -243,7 +243,7 @@ Obsidian 从零实现的逻辑。clean-room 重写时需要逐项重新实现。
 | # | 任务 |
 |---|------|
 | 3.1 | API 参考文档（JSDoc → 自动生成） |
-| 3.2 | 集成示例：纯 HTML/JS、Vue 3、React |
+| 3.2 | 集成示例：纯 HTML/JS、Vue 3 |
 | 3.3 | 在线 playground（`apps/web` 发布为静态站点） |
 | 3.4 | 迁移指南（从 vditor 到 xlxz-markdown-editor） |
 | 3.5 | 发布 v1.0.0 到 npm |
@@ -315,7 +315,7 @@ Obsidian 从零实现的逻辑。clean-room 重写时需要逐项重新实现。
 │       │   ├── kernel.ts     # createEditor() 内核
 │       │   ├── types.ts      # 所有公开类型
 │       │   ├── plugin.ts     # EditorPlugin 基类
-│       │   ├── plugins/      # 内置插件
+│       │   ├── plugins/      # 内置插件（阶段 5 实现，当前全部逻辑在 kernel.ts 中）
 │       │   │   ├── live-preview/
 │       │   │   ├── markdown-language/
 │       │   │   ├── theme/
@@ -356,16 +356,13 @@ Obsidian 从零实现的逻辑。clean-room 重写时需要逐项重新实现。
 
 ## 七、当前状态
 
-- [x] 逆向分析完成（md-live-preview 原型验证通过）
-- [x] Obsidian 定制深度审计完成（A/B/C 分类）
-- [x] 架构设计完成（微内核 + 插件）
-- [x] ROADMAP 文档完成（本文件）
-- [x] 阶段 0：项目基础设施
-- [x] 阶段 1：内核 + 基础插件
-- [x] 阶段 2：可选插件
-- [x] 阶段 3：API 稳定 + 文档
-- [ ] 阶段 4：iNote 集成验证
-- [ ] 阶段 5：Clean-Room 重写
+- [x] 3.1 API文档
+- [x] 3.2 架构文档
+- [x] 3.3 纯HTML示例
+- [x] 3.4 Vue示例
+- [x] 3.5 迁移指南
+- [x] 3.6 Playground
+- [x] 3.7 npm发布
 
 ---
 

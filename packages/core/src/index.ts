@@ -6,7 +6,7 @@
  *   const editor = createEditor(container, { doc: '# Hello' });
  */
 
-export { createEditor } from './kernel.js';
+export { createEditor, autoLoad } from './kernel.js';
 export type {
   EditorBackend,
   EditorOptions,
@@ -18,4 +18,5 @@ export type {
   SuggestItem,
   I18nProvider,
   AssetLoader,
+  AutoLoadOptions,
 } from './types.js';
