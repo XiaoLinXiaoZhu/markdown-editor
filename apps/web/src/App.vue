@@ -140,6 +140,13 @@ onMounted(() => {
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html, body { height: 100%; overflow: hidden; }
+#app {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
 body {
   display: flex;
   flex-direction: column;
