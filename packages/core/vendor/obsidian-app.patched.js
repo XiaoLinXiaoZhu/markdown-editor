@@ -77862,33 +77862,35 @@ ${n}
         return h;
       };
       t.prototype.setCellFocus = function (e, t, n) {
-        if (this.isMalformed) {
-          this.dispatchTable(e, t, n);
-        } else {
-          this.receiveCellFocus(e, t, n, true);
-        }
+        // Patched: table cell editing disabled (no sub-editor in this environment)
+        return;
       };
       t.prototype.receiveCellFocus = function (e, t, n, i = false) {
         var r = this;
         var o = r.rows;
         var a = r.alignments;
         var s = r.editor;
+        if (!s || typeof s.editTableCell !== 'function') return;
         var l = Math.clamp(e, 0, o.length - 1);
         var c = Math.clamp(t, 0, a.length - 1);
         var u = o[l][c];
-        var h = s.editTableCell(this, u);
-        var d = h.editor.cm;
-        if (n) {
-          d.dispatch({
-            annotations: i ? [] : [XF.of(true)],
-            selection: n(d)
-          });
+        try {
+          var h = s.editTableCell(this, u);
+          var d = h.editor.cm;
+          if (n) {
+            d.dispatch({
+              annotations: i ? [] : [XF.of(true)],
+              selection: n(d)
+            });
+          }
+          if (!this.selectionHead) {
+            u.scrollIntoView();
+          }
+          this.updateCellReadonly();
+          return h;
+        } catch (err) {
+          return;
         }
-        if (!this.selectionHead) {
-          u.scrollIntoView();
-        }
-        this.updateCellReadonly();
-        return h;
       };
       t.prototype.setAlignment = function (e, t) {
         var n = this.alignments;
@@ -91620,7 +91622,7 @@ ${a}`);
                   _ = a;
                 }
               }
-              if (J.has("HyperMD-table-row")) {
+              if (false /* table widget disabled — using plain text extension */) {
                 Y(r);
                 if (r - W > 1) {
                   Z(r);

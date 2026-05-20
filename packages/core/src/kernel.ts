@@ -8,6 +8,7 @@
  */
 import type { EditorBackend, EditorOptions, EditorInstance, EditorPlugin, PluginContext, SuggestConfig, SuggestItem } from './types.js';
 import { createLivePreview } from './live-preview.js';
+import { createTableExtension } from './table/index.js';
 
 // 默认后端实现
 const defaultBackend: Required<EditorBackend> = {
@@ -260,6 +261,19 @@ export function createEditor(
     owner: mockOwner,
     addChild(c: any) { return c; },
     removeChild(_c: any) {},
+    editTableCell(table: any, cell: any) {
+      // Stub: return a minimal cell editor pointing to the main view
+      return this.tableCell ||= {
+        table,
+        cell,
+        editor: { cm: view },
+        cm: view,
+        setReadonly() {},
+        onContextMenu() {},
+      };
+    },
+    destroyTableCell() { this.tableCell = null; },
+    tableCell: null as any,
   };
 
   // ── 构建基础 State ──
@@ -280,7 +294,7 @@ export function createEditor(
   const stateExtensions: any[] = [];
 
   // 基础 CM6 扩展
-  stateExtensions.push(jB.init(() => view));
+  stateExtensions.push(jB.init(() => mockEditor));
   stateExtensions.push(WB.init(() => mockOwner));
 
   // Tab 配置
@@ -457,6 +471,9 @@ export function createEditor(
     const nN = ZB.of((window as any).__baseExtensions);
     stateExtensions.push(nN);
   }
+
+  // 纯文本表格扩展（替代 Obsidian 交互式表格）
+  stateExtensions.push(...createTableExtension());
 
   // 创建 EditorState
   const fullState = EditorState.create({
