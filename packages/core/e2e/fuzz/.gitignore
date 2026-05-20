@@ -1,0 +1,4 @@
+# Golden files are generated and should be committed for reproducibility
+# But can be regenerated with: FUZZ_SEED=42 bun test e2e/fuzz/
+# Uncomment below to exclude them:
+# golden/
