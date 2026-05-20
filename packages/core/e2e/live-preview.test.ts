@@ -149,6 +149,64 @@ describe('Live Preview 渲染', () => {
     });
   });
 
+  // ─── Wiki-style Embed ───
+
+  describe('Wiki-style Embed (![[...]])', () => {
+    beforeEach(async () => {
+      await setDoc('![[some-file.png]]\n\nother line');
+    });
+
+    test('光标离开：渲染为 embed widget', async () => {
+      await clickLine(3, 0);
+      await waitForStable();
+      const page = getPage();
+      const embedInfo = await page.evaluate(() => {
+        const embed = document.querySelector('.internal-embed, .cm-embed-block, [class*="file-embed"]');
+        return {
+          exists: embed !== null,
+          className: embed?.className || '',
+        };
+      });
+      expect(embedInfo.exists).toBe(true);
+    });
+
+    test('光标进入：显示原始 markdown 语法', async () => {
+      await clickLine(1, 2);
+      await waitForStable();
+      const text = await getLineText(1);
+      expect(text).toContain('![[');
+      expect(text).toContain('some-file.png');
+    });
+  });
+
+  // ─── 图片 alt text ───
+
+  describe('图片 alt text', () => {
+    beforeEach(async () => {
+      await setDoc('![my photo](https://via.placeholder.com/50)\n\nother line');
+    });
+
+    test('光标离开：img 元素有正确的 alt 属性', async () => {
+      await clickLine(3, 0);
+      await waitForStable();
+      const page = getPage();
+      const imgInfo = await page.evaluate(() => {
+        const img = document.querySelector('.cm-content img') as HTMLImageElement;
+        return img ? { exists: true, alt: img.alt, src: img.src } : { exists: false, alt: '', src: '' };
+      });
+      expect(imgInfo.exists).toBe(true);
+      expect(imgInfo.alt).toBe('my photo');
+    });
+
+    test('光标进入：显示完整 markdown 图片语法', async () => {
+      await clickLine(1, 2);
+      await waitForStable();
+      const text = await getLineText(1);
+      expect(text).toContain('![my photo]');
+      expect(text).toContain('https://via.placeholder.com/50');
+    });
+  });
+
   // ─── 代码块 ───
 
   describe('代码块', () => {
