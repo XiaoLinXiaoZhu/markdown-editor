@@ -26,7 +26,7 @@ xlxz-markdown-editor 采用**微内核 + 插件**架构。内核（`createEditor
  Plugin A   Plugin B   Plugin C
 ```
 
-## 内核（~800 行，计划阶段 5 插件拆分后缩减至 ~300 行）
+## 内核（~882 行，远期依赖恢复后通过插件拆分缩减）
 
 内核位于 `packages/core/src/kernel.ts`，职责：
 

@@ -148,4 +148,4 @@ bun run packages/core/e2e/coverage/strip-ebml.ts
 cd packages/core && bun test e2e/
 ```
 
-预期：62 pass / 1 known timeout (compare.test.ts fuzz)
+预期：全部 E2E 测试通过

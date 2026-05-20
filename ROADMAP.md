@@ -23,7 +23,7 @@
 2. **依赖反转**。文件系统、网络、存储全部通过接口注入，内核不依赖任何具体实现。
 3. **开闭原则**。新功能通过新增插件实现，不修改内核代码。
 4. **体验复刻 Obsidian**。光标离开区域隐藏 markdown 语法符号、显示渲染效果；光标进入则显示原始符号。
-5. **先复刻后创新**。第一阶段完全复刻 Obsidian 行为（少量 mock），第二阶段根据反馈调整与 Obsidian 不同的功能。
+5. **先复刻后创新**。阶段 1 完全复刻 Obsidian 行为（少量 mock），阶段 2 后根据反馈调整与 Obsidian 不同的功能。
 
 ---
 
@@ -51,7 +51,7 @@
 └──────────────────────────────────────────┘
 ```
 
-内核大小目标：< 200 行 TypeScript。
+内核大小目标：远期 < 300 行 TypeScript（当前 ~882 行，所有逻辑内聚）。
 
 ### 2.2 插件系统
 
@@ -148,7 +148,7 @@ interface AssetLoader {
 
 ## 三、Obsidian 定制深度审计
 
-（完整分析见 `docs/obsidian-customization-audit.md`）
+（完整分析见 `docs/archived/obsidian-customization-audit.md`）
 
 ### A 类：完全自定义（15 项）
 
@@ -289,7 +289,7 @@ Obsidian 从零实现的逻辑。clean-room 重写时需要逐项重新实现。
 | D7 | 图片上传 | 先插入后异步上传（和 Obsidian 一致） | 2025-07 |
 | D8 | 链接行为 | 完全由外部回调控制（`onLinkClick` / `onExternalLinkClick`） | 2025-07 |
 | D9 | HTML 输出 | 不内置 `getHTML()`——markdown 是唯一真相源，需要 HTML 由外部用第三方 parser 生成 | 2025-07 |
-| D10 | 法律路径 | 当前使用 Obsidian 提取物（内部使用），通过依赖恢复策略（识别 vendor 内嵌 npm 包，逐步替换为同版本 npm import）替代 clean-room 重写 | 2025-07 |
+| D10 | 法律路径 | 当前使用 Obsidian 提取物（内部使用），通过依赖恢复策略（识别 vendor 内嵌 npm 包，逐步替换为同版本 npm import）替代 clean-room 重写 | 2026-05 |
 | D11 | import 风格 | 命名导出 `import { createEditor } from 'xlxz-markdown-editor'` | 2025-07 |
 | D12 | 字体/脚本加载 | 通过 `AssetLoader` 接口依赖注入，适配 Tauri file:// 协议 | 2025-07 |
 
@@ -303,67 +303,51 @@ Obsidian 从零实现的逻辑。clean-room 重写时需要逐项重新实现。
 ├── bunfig.toml
 ├── tsconfig.json             # 公共 tsconfig
 ├── ROADMAP.md                # 本文件
+├── README.md                 # 项目简介 + SSOT 原则
+├── CONTRIBUTING.md           # 贡献指南
+├── CRYSTALLIZATION_REPORT.md # 结晶报告
 ├── docs/
+│   ├── api.md                # API 参考
 │   ├── architecture.md       # 架构文档
-│   ├── obsidian-customization-audit.md  # Obsidian 定制审计
-│   └── api.md                # API 参考（阶段 3）
+│   ├── strategy-pivot.md     # 当前策略（依赖恢复）
+│   ├── vendor-patches.md     # Vendor 补丁记录
+│   ├── decisions/negative/   # 负向决策记录
+│   ├── inspection/           # 验收检查清单
+│   └── archived/             # 已归档文档
+│       └── obsidian-customization-audit.md
+├── assets/
+│   └── negative_adr_template.md
 ├── packages/
 │   └── core/
 │       ├── package.json      # "xlxz-markdown-editor"
 │       ├── tsconfig.json
 │       ├── src/
 │       │   ├── index.ts      # 公开 API 入口
-│       │   ├── kernel.ts     # createEditor() 内核
+│       │   ├── kernel.ts     # createEditor() 内核（~882 行）
 │       │   ├── types.ts      # 所有公开类型
-│       │   ├── plugin.ts     # EditorPlugin 基类
-│       │   ├── plugins/      # 内置插件（远期实现，当前全部逻辑在 kernel.ts 中）
-│       │   │   ├── live-preview/
-│       │   │   ├── markdown-language/
-│       │   │   ├── theme/
-│       │   │   ├── hanging-indent/
-│       │   │   ├── list-continuation/
-│       │   │   ├── markdown-surround/
-│       │   │   ├── close-brackets/
-│       │   │   ├── frontmatter/
-│       │   │   ├── wiki-link/
-│       │   │   ├── callout/
-│       │   │   ├── tag-render/
-│       │   │   ├── expand-text/
-│       │   │   ├── embed/
-│       │   │   ├── fold/
-│       │   │   ├── line-numbers/
-│       │   │   ├── indent-guide/
-│       │   │   ├── suggest/
-│       │   │   ├── attachment/
-│       │   │   ├── math/
-│       │   │   ├── syntax-highlight/
-│       │   │   └── i18n/
-│       │   └── vendor/       # Obsidian 运行时（远期通过依赖恢复策略精简）
-│       │       └── ...
+│       │   └── table/        # 纯文本表格扩展
+│       ├── e2e/              # E2E 测试（Puppeteer + bun test）
+│       │   ├── fuzz/         # Fuzz 等价性测试
+│       │   └── coverage/     # Vendor 分析工具
+│       ├── vendor/           # Obsidian 运行时（远期通过依赖恢复精简）
 │       └── dist/             # 构建产物
 ├── apps/
-│   └── web/
-│       ├── package.json
-│       ├── index.html
-│       ├── vite.config.ts
-│       └── src/
-│           ├── main.ts
-│           └── App.vue
-└── scripts/
-    └── extract-obsidian.ts   # 维护用工具
+│   └── web/                  # 验证应用（Vite + Vue）
+└── ref/                      # 历史原型（gitignored，vendor 重建源文件）
 ```
 
 ---
 
 ## 七、当前状态
 
-- [x] 3.1 API文档
-- [x] 3.2 架构文档
-- [x] 3.3 纯HTML示例
-- [x] 3.4 Vue示例
-- [x] 3.5 迁移指南
-- [x] 3.6 Playground
-- [x] 3.7 npm发布
+| 阶段 | 状态 | 说明 |
+|------|------|------|
+| 0 — 基础设施 | ✅ 完成 | monorepo + 构建链路 + vendor 迁移 |
+| 1 — 内核 + 基础插件 | ✅ 完成 | 所有功能内聚在 kernel.ts（~882 行），38 E2E 测试通过 |
+| 2 — 可选插件 | ⏳ 未开始 | suggest 已内联在 kernel.ts，其余未实现 |
+| 3 — API 稳定 + 文档 | ✅ 完成 | npm v1.0.0 已发布，api.md + architecture.md 就绪 |
+| 4 — iNote 集成 | ⏳ 未开始 | 等待阶段 5 依赖恢复完成后进行 |
+| 5 — 依赖恢复 | ⏳ 进行中 | 策略已确定（strategy-pivot.md），vendor 已剥离 EBML，待识别 CM6 版本 |
 
 ---
 

@@ -274,7 +274,7 @@ Individual handlers (required by 4617):
 cd packages/core && bun test e2e/
 ```
 
-62/63 通过即为成功（compare.test.ts fuzz 超时是已知问题）。
+全部 E2E 测试通过即为成功。
 
 ---
 
