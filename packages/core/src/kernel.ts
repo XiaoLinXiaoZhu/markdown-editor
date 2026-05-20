@@ -264,7 +264,8 @@ export function createEditor(
   // ── 构建基础 State ──
 
   const { keymap } = (window as any).__cm6;
-  const __listRegex = (window as any).__listRegex;
+  // switched from window.__listRegex to inline definition because it's a simple regex
+  const __listRegex = /^([>\s]*)(([*+-] |(\d+)([.)] ))(?:\[(.)\] )?)?/;
   const __indentMore = (window as any).__commands?.indentMore;
   const __indentLess = (window as any).__commands?.indentLess;
   const __newlineAndIndent = (window as any).__commands?.newlineAndIndent;
