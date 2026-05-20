@@ -28,5 +28,8 @@
     "vue": {
       "optional": true
     }
+  },
+  "devDependencies": {
+    "puppeteer": "^25.0.4"
   }
 }

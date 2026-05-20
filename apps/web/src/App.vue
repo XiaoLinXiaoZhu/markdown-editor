@@ -85,6 +85,10 @@ function tryMount(attempt: number = 0) {
 
     status.value = { text: 'Live preview active', state: 'ok' };
 
+    // Expose for E2E testing
+    (window as any).__editorInstance = editor;
+    (window as any).__editorView = editor.view;
+
     // Register mock [[ suggest
     suggestCleanup = editor.registerSuggest({
       trigger: /\[\[([^\]]*)$/,
