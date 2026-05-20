@@ -40,17 +40,50 @@ async function resetEditor(page: Page): Promise<void> {
   await page.evaluate(() => {
     const view = (window as any).__editorView;
     if (!view) return;
-    // 设置一个简单的初始文档
+    // 设置包含多种 markdown 元素的初始文档
+    const initDoc = [
+      '# Fuzz Test Document',
+      '',
+      'Normal paragraph with **bold** and *italic* text.',
+      '',
+      '```javascript',
+      'const x = 42;',
+      '```',
+      '',
+      '> Blockquote here',
+      '',
+      '- List item 1',
+      '- List item 2',
+      '  - Nested item',
+      '',
+      '| Col A | Col B |',
+      '| ----- | ----- |',
+      '| cell1 | cell2 |',
+      '',
+      '$$',
+      'E = mc^2',
+      '$$',
+      '',
+      'Inline $x^2$ formula and [[wiki-link]] here.',
+      '',
+      '> [!note] Callout',
+      '> Content inside callout.',
+      '',
+      '---',
+      '',
+      'End of document.',
+      '',
+    ].join('\n');
     view.dispatch({
-      changes: { from: 0, to: view.state.doc.length, insert: '# Fuzz Test\n\nStart typing here.\n' },
+      changes: { from: 0, to: view.state.doc.length, insert: initDoc },
     });
-    // 将光标放在第 3 行末尾
+    // 将光标放在正文区域
     const line3 = view.state.doc.line(3);
     view.dispatch({ selection: { anchor: line3.to, head: line3.to } });
     view.focus();
   });
-  // 等待稳定
-  await page.evaluate(() => new Promise<void>(r => setTimeout(r, 100)));
+  // 等待稳定（语法树解析 + 渲染完成）
+  await page.evaluate(() => new Promise<void>(r => setTimeout(r, 200)));
 }
 
 /** 执行一轮 fuzz 测试 */
@@ -116,11 +149,21 @@ export function formatDivergence(result: FuzzRunResult): string {
     `  Actual hash:   ${d.actual}`,
   ];
   if (d.actualState) {
-    const docPreview = d.actualState.doc.length > 100
-      ? d.actualState.doc.substring(0, 100) + '...'
+    const docPreview = d.actualState.doc.length > 200
+      ? d.actualState.doc.substring(0, 200) + '...'
       : d.actualState.doc;
     lines.push(`  Doc: ${JSON.stringify(docPreview)}`);
     lines.push(`  Selection: [${d.actualState.selection}]`);
+    lines.push(`  Lines rendered: ${d.actualState.lineStates.length}`);
+    // Show first few lines with their DOM state
+    lines.push(`  Line states (first 10):`);
+    for (let i = 0; i < Math.min(10, d.actualState.lineStates.length); i++) {
+      const ls = d.actualState.lineStates[i];
+      lines.push(`    L${i+1}: class="${ls.lineClass}" widgets=${ls.widgetCount} text="${ls.text.substring(0, 60)}"`);
+      if (ls.children.length > 0) {
+        lines.push(`         children: [${ls.children.slice(0, 8).join(', ')}${ls.children.length > 8 ? '...' : ''}]`);
+      }
+    }
   }
   lines.push(`\nReproduce: FUZZ_SEED=${result.seed} bun test e2e/fuzz/`);
   return lines.join('\n');
