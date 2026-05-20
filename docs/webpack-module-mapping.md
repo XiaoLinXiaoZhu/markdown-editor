@@ -242,12 +242,6 @@ Individual handlers (required by 4617):
 目标: base64-js, ieee754, events, character-entities 系列
 方法: 安装 npm 包 → 用 Vite/bundler 外部化 → 修改 module table entry
 
-```
-### Phase 1: 安全替换（无风险）
-
-目标: base64-js, ieee754, events, character-entities 系列
-方法: 安装 npm 包 → 修改 module table entry 为调用 npm 包
-
 ```js
 // 替换前 (module table 中)
 9742: (e, t) => { /* 2.1 KB base64-js 实现 */ }
