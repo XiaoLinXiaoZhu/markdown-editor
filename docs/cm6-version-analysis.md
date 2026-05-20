@@ -266,3 +266,54 @@ L108312+:    @lezer/lr
 | 8166 | buffer (完整polyfill) | L10512-11942 | 1430行 | 通过 base64-js |
 
 这些模块通过 webpack `n(moduleId)` 调用引用，可以安全地用 npm 等版本替换模块体。
+
+## 正确的渐进替换路径（已验证）
+
+### 核心发现
+
+**部分 CM6 外部化不可行**：仅替换类定义会导致 Facet 身份冲突（vendor 内部 Facet 与 npm Facet 是不同对象）。
+
+**正确方法**：通过 `window.__cm6_packages` 使用 vendor 自身的 CM6 实例编写替换代码。已验证此方法可行（51 测试通过）。
+
+### 已实现
+
+vendor 已 patch 暴露：
+```javascript
+window.__cm6_packages = {
+  "@codemirror/state": e,   // 29 exports
+  "@codemirror/view": t,    // 45 exports  
+  "@lezer/common": i,       // 13 exports
+  "@lezer/highlight": r,    // 7 exports
+  "@codemirror/language": o, // 58 exports
+  "@codemirror/commands": a, // 100 exports
+  "@codemirror/search": s,   // 19 exports
+  "@codemirror/autocomplete": l, // 30 exports
+  "@codemirror/collab": c,   // 6 exports
+  "@codemirror/lint": u,     // 12 exports
+  "@lezer/lr": h,           // 6 exports
+};
+// 总计 325 个函数/类可直接使用
+```
+
+### Vendor 全局的真实映射
+
+| Vendor 全局 | 实际是 | __cm6_packages 路径 | 可替换? |
+|------------|-------|-------------------|---------|
+| `__lineNumbers` | gutters | `view.gutters` | ✓ |
+| `__highlightActiveLineGutter` | lineNumbers | `view.lineNumbers` | ✓ |
+| `__indentUnit` | indentUnit | `lang.indentUnit` | ✓ |
+| `__foldGutter` | codeFolding | `lang.codeFolding` | ✓ |
+| `__commands.newlineAndIndent` | insertNewlineAndIndent | `cmds.insertNewlineAndIndent` | ✓ |
+| `__activeLineGutter` | 自定义扩展实例 | — | ✗ (Obsidian) |
+| `__commands.indentMore` | 自定义命令 | — | ✗ (Obsidian) |
+| `__commands.indentLess` | 自定义命令 | — | ✗ (Obsidian) |
+| `__kH` | Live Preview 引擎 | — | ✗ (最终重写) |
+| `__language` | Markdown parser | — | ✗ (最终重写) |
+| `__stateFields` | 编辑器状态 | — | ✗ (最终重写) |
+| `__closeBrackets` | 自动配对 | — | ✗ (最终重写) |
+
+### 下一步
+
+1. **修改 kernel.ts**：将 5 个可替换全局改为从 `__cm6_packages` 读取
+2. **从 vendor 中移除对应的 `window.__X = ...` 赋值**
+3. **开始用 `__cm6_packages` 编写 `__kH` 替代实现**：这是关键路径
