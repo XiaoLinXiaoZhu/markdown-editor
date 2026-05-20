@@ -33,6 +33,8 @@ bun.lock
 
 # Test coverage
 coverage/
+!packages/core/e2e/coverage/
+packages/core/e2e/coverage/output/
 
 # Tauri (if generated during iNote integration)
 src-tauri/target/
