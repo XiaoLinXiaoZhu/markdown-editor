@@ -103449,6 +103449,7 @@ window.require = function (m) {
         Compartment: Ne,
         Transaction: Qe,
       };
+      window.__cm6_packages = { "@codemirror/state": e, "@codemirror/view": t, "@lezer/common": i, "@lezer/highlight": r, "@codemirror/language": o, "@codemirror/commands": a, "@codemirror/search": s, "@codemirror/autocomplete": l, "@codemirror/collab": c, "@codemirror/lint": u, "@lezer/lr": h };
       window.__fields = { searchHighlight: If };
       window.__language = JB;
       window.__baseExtensions = tN;
