@@ -15,7 +15,7 @@
 | 工作区 | bun workspaces（monorepo） |
 | 验证项目 | `apps/web` |
 | 用户范围 | 自己 + 少量熟人开发者 |
-| 许可证 | 待定（远期 clean-room 后 MIT） |
+| 许可证 | 待定（远期依赖恢复完成后 MIT） |
 
 ### 核心原则
 
@@ -260,18 +260,19 @@ Obsidian 从零实现的逻辑。clean-room 重写时需要逐项重新实现。
 | 4.4 | 适配便签列表卡片（markdown → HTML 预览） |
 | 4.5 | 全功能回归测试 |
 
-### 阶段 5：Clean-Room 重写（远期）
+### 阶段 5：依赖恢复 + 精简（远期）
 
-**目标**：移除对 `obsidian-app.patched.js` 的依赖，纯开源 CM6 实现。
+**目标**：通过识别和恢复 vendor 中内嵌的 npm 包，逐步减少对 `obsidian-app.patched.js` 的依赖。
 
 | # | 任务 |
 |---|------|
-| 5.1 | 用 `@codemirror/language` Language API 重写 markdown 语言定义 |
-| 5.2 | 用 CM6 ViewPlugin + Decoration 重写 live preview 渲染 |
-| 5.3 | 重写所有 A 类插件（悬挂缩进、列表续行、frontmatter 等） |
-| 5.4 | 重写所有 B 类插件（基于 CM6 公开扩展点） |
-| 5.5 | 完全移除 vendor 目录 |
-| 5.6 | 发布 v2.0.0（纯开源许可） |
+| 5.1 | 识别 vendor 中内嵌的 npm 包版本（@codemirror/*、@lezer/*、hast-util-* 等） |
+| 5.2 | 安装对应版本的 npm 包，用 import 替代 vendor 内嵌代码 |
+| 5.3 | 逐层剥离：第三方工具库 → CM6 基础设施 → Lezer/Markdown 语法 |
+| 5.4 | 最终仅保留 Obsidian 自有编辑器逻辑（此时体量已大幅缩小） |
+| 5.5 | 发布 v2.0.0（纯开源许可） |
+
+> 详细策略见 `docs/strategy-pivot.md`。
 
 ---
 
@@ -288,7 +289,7 @@ Obsidian 从零实现的逻辑。clean-room 重写时需要逐项重新实现。
 | D7 | 图片上传 | 先插入后异步上传（和 Obsidian 一致） | 2025-07 |
 | D8 | 链接行为 | 完全由外部回调控制（`onLinkClick` / `onExternalLinkClick`） | 2025-07 |
 | D9 | HTML 输出 | 不内置 `getHTML()`——markdown 是唯一真相源，需要 HTML 由外部用第三方 parser 生成 | 2025-07 |
-| D10 | 法律路径 | 当前使用 Obsidian 提取物（内部使用），API 稳定后 clean-room 重写 | 2025-07 |
+| D10 | 法律路径 | 当前使用 Obsidian 提取物（内部使用），通过依赖恢复策略（识别 vendor 内嵌 npm 包，逐步替换为同版本 npm import）替代 clean-room 重写 | 2025-07 |
 | D11 | import 风格 | 命名导出 `import { createEditor } from 'xlxz-markdown-editor'` | 2025-07 |
 | D12 | 字体/脚本加载 | 通过 `AssetLoader` 接口依赖注入，适配 Tauri file:// 协议 | 2025-07 |
 
@@ -315,7 +316,7 @@ Obsidian 从零实现的逻辑。clean-room 重写时需要逐项重新实现。
 │       │   ├── kernel.ts     # createEditor() 内核
 │       │   ├── types.ts      # 所有公开类型
 │       │   ├── plugin.ts     # EditorPlugin 基类
-│       │   ├── plugins/      # 内置插件（阶段 5 实现，当前全部逻辑在 kernel.ts 中）
+│       │   ├── plugins/      # 内置插件（远期实现，当前全部逻辑在 kernel.ts 中）
 │       │   │   ├── live-preview/
 │       │   │   ├── markdown-language/
 │       │   │   ├── theme/
@@ -337,7 +338,7 @@ Obsidian 从零实现的逻辑。clean-room 重写时需要逐项重新实现。
 │       │   │   ├── math/
 │       │   │   ├── syntax-highlight/
 │       │   │   └── i18n/
-│       │   └── vendor/       # Obsidian 运行时（阶段 5 移除）
+│       │   └── vendor/       # Obsidian 运行时（远期通过依赖恢复策略精简）
 │       │       └── ...
 │       └── dist/             # 构建产物
 ├── apps/
@@ -366,4 +367,4 @@ Obsidian 从零实现的逻辑。clean-room 重写时需要逐项重新实现。
 
 ---
 
-> 最后更新：2025-07
+> 最后更新：2026-05
