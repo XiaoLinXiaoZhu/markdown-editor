@@ -204,6 +204,7 @@ function describeStmt(stmt: t.Statement): string {
 function main() {
   console.log(`[extract] Level ${level}, range [${fromIdx}, ${toIdx}]`);
   const source = readFileSync(INPUT_PATH, 'utf-8');
+  const lines = source.split('\n');
   const { stmts, allDefined } = getChildren(source, level);
 
   console.log(`[extract] Found ${stmts.length} children at level ${level}`);
@@ -261,7 +262,6 @@ function main() {
   }
 
   // Write summary
-  const lines = source.split('\n');
   const summaryLines: string[] = [
     `// Level ${level} extraction: ${slice.length} blocks`,
     `// Each block: function(inputs) { ...code... return { outputs }; }`,
@@ -342,6 +342,65 @@ function main() {
     console.log(`#${String(info.idx).padStart(4)} [${String(lineCount).padStart(5)}L] ${info.desc.padEnd(30)} | in:${String(info.inputs.length).padStart(3)} out:${String(outputs.length).padStart(3)}`);
   }
   if (slice.length > 50) console.log(`  ... (${slice.length - 50} more)`);
+
+  // ━━━ Reassemble: produce a runnable file from blocks ━━━
+  const reassemblePath = join(outDir, '_assembled.js');
+  const allBlocks = stmtInfos; // use full range for assembly, not just the slice
+
+  if (level === 1) {
+    // Level 1: wrap blocks in outer IIFE frame
+    // Frame: lines before outer IIFE + "(() => {" + blocks + "})();"
+    const mocks = lines.slice(0, 40).join('\n'); // L1-40
+    const blockBodies: string[] = [];
+    for (const info of allBlocks) {
+      blockBodies.push(lines.slice(info.startLine - 1, info.endLine).join('\n'));
+    }
+    const assembled = [mocks, '(() => {', ...blockBodies, '})();'].join('\n');
+    writeFileSync(reassemblePath, assembled);
+    // Verify
+    if (assembled === source) {
+      console.log(`\n[extract] ✅ _assembled.js matches original exactly`);
+    } else {
+      // Check line-by-line
+      const origLines = source.split('\n');
+      const asmLines = assembled.split('\n');
+      let firstDiff = -1;
+      for (let i = 0; i < Math.min(origLines.length, asmLines.length); i++) {
+        if (origLines[i] !== asmLines[i]) { firstDiff = i + 1; break; }
+      }
+      console.log(`\n[extract] ⚠️ _assembled.js differs from original (first diff at line ${firstDiff}, ${origLines.length} vs ${asmLines.length} lines)`);
+    }
+  } else if (level === 2) {
+    // Level 2: wrap blocks in full frame (mocks + outer IIFE + inner IIFE wrapper)
+    const mocks = lines.slice(0, 40).join('\n');
+    // Outer IIFE: L41 content + outer body before inner IIFE + inner IIFE wrapper
+    // Outer IIFE body = L42 to L9991 (webpack stuff) + inner IIFE opening + blocks + inner IIFE close
+    // Actually easier: the outer IIFE frame is L41, L42-9991 (blocks 0-6 from L1), then inner IIFE wrapper
+    // Let's just use the known line structure:
+    const outerOpen = lines[40]; // "(() => {"
+    const outerBody = lines.slice(41, 9991).join('\n'); // webpack modules + runtime (L42-9991)
+    const innerOpen = '  (() => {\n    "use strict";\n'; // L9992-9994 (includes empty line after "use strict")
+    const blockBodies: string[] = [];
+    for (const info of allBlocks) {
+      blockBodies.push(lines.slice(info.startLine - 1, info.endLine).join('\n'));
+    }
+    const innerClose = '  })();'; // L43663
+    const outerClose = '})();'; // L43664
+    const assembled = [mocks, outerOpen, outerBody, innerOpen, ...blockBodies, innerClose, outerClose].join('\n');
+    writeFileSync(reassemblePath, assembled);
+    if (assembled === source) {
+      console.log(`\n[extract] ✅ _assembled.js matches original exactly`);
+    } else {
+      const origLines = source.split('\n');
+      const asmLines = assembled.split('\n');
+      let firstDiff = -1;
+      for (let i = 0; i < Math.min(origLines.length, asmLines.length); i++) {
+        if (origLines[i] !== asmLines[i]) { firstDiff = i + 1; break; }
+      }
+      console.log(`\n[extract] ⚠️ _assembled.js differs (first diff L${firstDiff}, orig ${origLines.length} vs asm ${asmLines.length} lines)`);
+    }
+  }
+  console.log(`[extract] Reassembled file: ${reassemblePath}`);
 }
 
 main();
