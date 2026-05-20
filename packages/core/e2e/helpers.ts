@@ -123,7 +123,23 @@ export async function press(key: string): Promise<void> {
     const view = (window as any).__editorView;
     view?.focus();
   });
-  await page.keyboard.press(key);
+
+  // 处理修饰键组合（如 "Shift+Tab", "Control+s"）
+  const parts = key.split('+');
+  if (parts.length > 1) {
+    const modifiers = parts.slice(0, -1);
+    const mainKey = parts[parts.length - 1];
+    for (const mod of modifiers) {
+      await page.keyboard.down(mod as any);
+    }
+    await page.keyboard.press(mainKey as any);
+    for (const mod of modifiers.reverse()) {
+      await page.keyboard.up(mod as any);
+    }
+  } else {
+    await page.keyboard.press(key as any);
+  }
+
   await waitForStable();
 }
 
