@@ -120,6 +120,35 @@ Module                    | Decls | Empty | Active | Imports | Exports | Type
 
 ---
 
+## 边界质量验证
+
+通过分析边界两侧 ±50 行内声明的交叉引用密度验证拆分合理性：
+
+```
+Boundary  | From → To                           | Fwd | Bwd | Quality
+──────────────────────────────────────────────────────────────────────
+L12701    | cm6-state → cm6-rangeset            |   0 |   0 | ✅ clean
+L13401    | cm6-rangeset → cm6-view-dom         |   1 |   7 | 🟡 ok
+L15901    | cm6-view-dom → cm6-view-core        |   1 |   3 | ✅ clean
+L18301    | cm6-view-core → cm6-view-ext        |   0 |   0 | ✅ clean
+L20601    | cm6-view-ext → lezer-common         |   2 |   0 | ✅ clean
+L21801    | lezer-common → cm6-language         |   0 |   0 | ✅ clean
+L23501    | cm6-language → cm6-commands         |   0 |  11 | 🟡 ok
+L25501    | cm6-commands → cm6-search           |   0 |  10 | 🟡 ok
+L26201    | cm6-search → obsidian-ui            |   0 |   2 | ✅ clean
+L29001    | obsidian-ui → obsidian-vault        |   2 |   3 | 🟡 ok
+L31501    | obsidian-vault → obsidian-editor    |   0 |   3 | ✅ clean
+L34001    | obsidian-editor → obsidian-widgets  |   0 |  11 | 🟡 ok
+L36632    | obsidian-widgets → live-preview     |   0 |  44 | 🔴 expected
+L37175    | live-preview → obsidian-complete    |   0 |   8 | 🟡 ok
+L38101    | obsidian-complete → lezer-lr        |   0 |   7 | 🟡 ok
+L38401    | lezer-lr → obsidian-app             |   0 |   2 | ✅ clean
+```
+
+17→18 的高耦合是预期的（Live Preview 大量消费 Widget 类），不是拆分缺陷。
+
+---
+
 ## 替换路径（修订）
 
 基于模块拆解的新认知，替换路径更清晰：
