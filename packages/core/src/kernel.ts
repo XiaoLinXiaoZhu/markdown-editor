@@ -7,6 +7,7 @@
  * 3. 暴露文档读写接口
  */
 import type { EditorBackend, EditorOptions, EditorInstance, EditorPlugin, PluginContext, SuggestConfig, SuggestItem } from './types.js';
+import { createLivePreview } from './live-preview.js';
 
 // 默认后端实现
 const defaultBackend: Required<EditorBackend> = {
@@ -439,9 +440,16 @@ export function createEditor(
   if (KB_ext) {
     stateExtensions.push(KB_ext.init(() => true));
   }
-  const livePreviewExts = (window as any).__kH?.(mockEditor, view);
-  if (livePreviewExts) {
-    stateExtensions.push(livePreviewExts);
+  if ((window as any).__useOpenSourceLivePreview) {
+    // 开源 Live Preview 实现
+    const osLivePreview = createLivePreview(mockEditor, view);
+    stateExtensions.push(osLivePreview);
+  } else {
+    // Vendor Live Preview (Obsidian __kH)
+    const livePreviewExts = (window as any).__kH?.(mockEditor, view);
+    if (livePreviewExts) {
+      stateExtensions.push(livePreviewExts);
+    }
   }
 
   // Base extensions（Obsidian 基础扩展集）
