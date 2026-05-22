@@ -48,6 +48,7 @@ export {
   linkHandlerPlugin,
   attachmentPlugin,
   tablePlugin,
+  tableContinuationPlugin,
   themePlugin,
   baseExtensionsPlugin,
   keymapPlugin,

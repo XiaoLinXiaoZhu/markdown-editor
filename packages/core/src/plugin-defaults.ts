@@ -21,6 +21,7 @@ import {
   linkHandlerPlugin,
   attachmentPlugin,
   tablePlugin,
+  tableContinuationPlugin,
   keymapPlugin,
   onChangePlugin,
 } from './plugins/index.js';
@@ -63,6 +64,7 @@ export function getDefaultPlugins(opts: Partial<EditorOptions>): EditorPlugin[] 
   plugins.push(linkHandlerPlugin);
   plugins.push(attachmentPlugin);
   plugins.push(tablePlugin);
+  plugins.push(tableContinuationPlugin);
 
   // 回调
   plugins.push(onChangePlugin);
