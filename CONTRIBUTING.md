@@ -37,25 +37,25 @@
 
 ```
 changelog/
-├── unreleased/          # 下个版本的变更（尚未发布）
-│   ├── added-xxx.md
-│   └── fixed-yyy.md
-├── 2.1.0/               # 已发布版本
-│   ├── added-set-mode.md
+├── unreleased.md        # 下个版本的变更（尚未发布时创建）
+├── 2.1.0/
+│   ├── added-mode-and-theme-api.md
+│   ├── added-table-continuation.md
 │   └── fixed-table-colors.md
 └── 2.0.0/
+    ├── breaking-plugin-architecture.md
     ├── breaking-rename-package.md
-    └── added-microkernel.md
+    └── added-input-prompter.md
 ```
 
-### 片段文件命名
+### 片段粒度
 
-```
-<type>-<name>.md
-```
+一个片段文件 = 一个**功能单元**的完整变更说明。相关的 API 放在同一个片段中：
 
-- `type`：`breaking` | `added` | `changed` | `fixed` | `removed`
-- `name`：简短描述（kebab-case）
+- `added-mode-and-theme-api.md` — setMode + getMode + setTheme + EditorMode 类型（同一功能）
+- `breaking-plugin-architecture.md` — 整个插件化重构（一件大事）
+
+不要为每个方法/每行代码创建单独片段。判断标准：能否用一句话向用户解释"这是什么变更"——如果能，就是一个片段。
 
 ### 片段内容
 

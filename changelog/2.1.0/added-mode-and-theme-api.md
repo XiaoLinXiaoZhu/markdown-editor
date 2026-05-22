@@ -1,0 +1,1 @@
+`editor.setMode(mode)` / `editor.getMode()` — switch between IR (live preview), RAW (source), VIEW (reading) modes; `editor.setTheme(theme)` — switch dark/light themes at runtime; `EditorMode` type exported; demo toolbar with toggle buttons

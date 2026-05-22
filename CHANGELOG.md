@@ -10,10 +10,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Generated from `
 
 ### Added
 
-- Demo toolbar with mode and theme toggle buttons
-- `editor.getMode()` — get current editing mode; `EditorMode` type exported (`'ir' | 'raw' | 'view'`)
-- `editor.setMode(mode)` — switch between IR (live preview), RAW (source), and VIEW (reading) modes
-- `editor.setTheme(theme)` — switch between dark and light themes at runtime
+- `editor.setMode(mode)` / `editor.getMode()` — switch between IR (live preview), RAW (source), VIEW (reading) modes; `editor.setTheme(theme)` — switch dark/light themes at runtime; `EditorMode` type exported; demo toolbar with toggle buttons
 - `table-continuation` plugin — Enter in table rows inserts empty row, Enter on empty row exits table, auto-formats after insertion
 
 ### Fixed
@@ -26,22 +23,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Generated from `
 
 ### Breaking Changes
 
-- Internal architecture completely rewritten (public API remains compatible)
+- Internal architecture rewritten to microkernel + plugin system: kernel reduced from ~882 to ~180 lines, all features extracted into 18 independent `EditorPlugin` modules, default plugin set conditionally loaded based on `EditorOptions`; all plugins and `CompletionProvider` type exported for advanced composition; `src/extensions.ts`, `src/suggest.ts`, `src/link-handler.ts`, `src/attachment.ts` removed (replaced by plugin equivalents)
 - Package renamed from `xlxz-markdown-editor` to `@xlxz/markdown-editor`
 
 ### Added
 
 - **Input Prompter** (`suggest` plugin): multi-provider completion framework — multiple `CompletionProvider` instances share a single popup UI, supports `[[` wiki-link, `#` tag, `/` command, or any custom trigger
-- **Microkernel architecture**: kernel reduced to ~180 lines, all features implemented as independent plugins
-- All 18 built-in plugins exported for advanced composition; `CompletionProvider` type exported for custom provider authoring
-- **18 built-in plugins**: each feature is an `EditorPlugin` with `id`, `deps`, `install`, `uninstall`
-
-### Changed
-
-- `kernel.ts` reduced from ~882 lines (monolithic) to ~180 lines (pure lifecycle + registry)
-- Default plugin set loaded based on `EditorOptions` (conditional: fold, line-numbers, indent-guide, close-brackets)
-
-### Removed
-
-- `src/extensions.ts` (hardcoded extension assembly — replaced by plugin system)
-- `src/suggest.ts`, `src/link-handler.ts`, `src/attachment.ts` (replaced by plugins)
