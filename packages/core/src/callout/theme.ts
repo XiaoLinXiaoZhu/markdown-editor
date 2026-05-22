@@ -67,13 +67,12 @@ export function createCalloutTheme(EditorView: any) {
       display: 'inline-flex',
       alignItems: 'center',
       justifyContent: 'center',
-      width: '1em',
-      height: '1em',
       flexShrink: '0',
     },
     '.cm-callout-icon svg': {
-      width: '100%',
-      height: '100%',
+      width: '1em',
+      height: '1em',
+      strokeWidth: '2',
     },
     '.cm-callout-title-label': {
       whiteSpace: 'nowrap',
