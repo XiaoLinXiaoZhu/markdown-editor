@@ -6,6 +6,23 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Versioning follo
 
 ---
 
+## [2.1.0] — 2026-05
+
+### Added
+
+- `editor.setTheme(theme)` — switch between dark and light themes at runtime
+- `editor.setMode(mode)` — switch between IR (live preview), RAW (source), and VIEW (reading) modes
+- `editor.getMode()` — get current editing mode
+- `EditorMode` type exported (`'ir' | 'raw' | 'view'`)
+- `table-continuation` plugin — Enter in table rows inserts empty row, Enter on empty row exits table, auto-formats after insertion
+- Demo toolbar with mode and theme toggle buttons
+
+### Fixed
+
+- Table row color alternation (even rows transparent, odd rows tinted)
+
+---
+
 ## [2.0.0] — 2026-05
 
 ### Breaking Changes
@@ -67,5 +84,6 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Versioning follo
 
 ---
 
+[2.1.0]: https://github.com/user/markdown-editor/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/user/markdown-editor/compare/v1.0.0...v2.0.0
 [1.0.0]: https://github.com/user/markdown-editor/releases/tag/v1.0.0
