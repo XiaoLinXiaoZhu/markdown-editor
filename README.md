@@ -1,4 +1,4 @@
-# xlxz-markdown-editor
+# @xlxz/markdown-editor
 
 基于 Obsidian CM6 引擎的 Markdown Live Preview 编辑器组件。
 
@@ -9,7 +9,7 @@ cd packages/core && bun install && bun run build
 ```
 
 ```typescript
-import { createEditor } from 'xlxz-markdown-editor';
+import { createEditor } from '@xlxz/markdown-editor';
 
 const editor = createEditor(container, {
   doc: '# Hello World',
@@ -32,7 +32,7 @@ const editor = createEditor(container, {
 
 ```
 ├── ROADMAP.md              # 项目路线图
-├── packages/core/          # npm 包（xlxz-markdown-editor）
+├── packages/core/          # npm 包（@xlxz/markdown-editor）
 │   ├── src/                # 源码
 │   ├── vendor/             # Obsidian 运行时
 │   └── e2e/                # E2E 测试

@@ -1,10 +1,10 @@
 # 架构文档
 
-> xlxz-markdown-editor 微内核架构
+> @xlxz/markdown-editor 微内核架构
 
 ## 概述
 
-xlxz-markdown-editor 采用**微内核 + 插件**架构。内核（`createEditor()`）只负责三件事：
+@xlxz/markdown-editor 采用**微内核 + 插件**架构。内核（`createEditor()`）只负责三件事：
 
 1. 创建 CM6 EditorView
 2. 管理插件注册表（use/unuse）
@@ -82,7 +82,7 @@ interface PluginContext {
 ### 编写插件
 
 ```typescript
-import type { EditorPlugin } from 'xlxz-markdown-editor';
+import type { EditorPlugin } from '@xlxz/markdown-editor';
 
 const wordCountPlugin: EditorPlugin = {
   id: 'word-counter',
@@ -145,7 +145,7 @@ editor.registerSuggest({
 });
 
 // 方式 2：直接操作 suggest 插件状态
-import { suggestPlugin } from 'xlxz-markdown-editor';
+import { suggestPlugin } from '@xlxz/markdown-editor';
 // suggest 插件通过 ctx.setState('suggest', state) 暴露 addProvider/removeProvider
 ```
 

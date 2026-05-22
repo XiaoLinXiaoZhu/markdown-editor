@@ -1,4 +1,4 @@
-# xlxz-markdown-editor — ROADMAP
+# @xlxz/markdown-editor — ROADMAP
 
 > 基于 Obsidian CM6 引擎的 Markdown 即时渲染编辑器组件。npm 包分发，微内核架构，体验与 Obsidian 完全一致。
 
@@ -8,7 +8,7 @@
 
 | 维度 | 决策 |
 |------|------|
-| 包名 | `xlxz-markdown-editor` |
+| 包名 | `@xlxz/markdown-editor` |
 | 仓库 | `E:\_Project\@xlxz\markdown-editor` |
 | 分发 | npm（ESM + CJS + types） |
 | 架构 | 微内核 + 插件系统 |
@@ -222,7 +222,7 @@ Obsidian 从零实现的逻辑。clean-room 重写时需要逐项重新实现。
 | 1.16 | 实现 `indent-guide` 插件 | 1.1 |
 | 1.17 | `apps/web` 集成验证：打开 demo 文档，交互正常 | 1.2-1.16 |
 
-阶段 1 产出：npm 可发布的 `xlxz-markdown-editor`（alpha 版），具备与 Obsidian 一致的编辑体验。
+阶段 1 产出：npm 可发布的 `@xlxz/markdown-editor`（alpha 版），具备与 Obsidian 一致的编辑体验。
 
 ### 阶段 2：可选插件（tree-shakeable 的重型依赖）
 
@@ -245,7 +245,7 @@ Obsidian 从零实现的逻辑。clean-room 重写时需要逐项重新实现。
 | 3.1 | API 参考文档（JSDoc → 自动生成） |
 | 3.2 | 集成示例：纯 HTML/JS、Vue 3 |
 | 3.3 | 在线 playground（`apps/web` 发布为静态站点） |
-| 3.4 | 迁移指南（从 vditor 到 xlxz-markdown-editor） |
+| 3.4 | 迁移指南（从 vditor 到 @xlxz/markdown-editor） |
 | 3.5 | 发布 v1.0.0 到 npm |
 
 ### 阶段 4：iNote 集成验证
@@ -254,7 +254,7 @@ Obsidian 从零实现的逻辑。clean-room 重写时需要逐项重新实现。
 
 | # | 任务 |
 |---|------|
-| 4.1 | iNote 独立分支集成 `xlxz-markdown-editor` |
+| 4.1 | iNote 独立分支集成 `@xlxz/markdown-editor` |
 | 4.2 | 适配图片存储（`saveAttachment` → Tauri 文件系统） |
 | 4.3 | 适配链接导航（`atom:///` 协议） |
 | 4.4 | 适配便签列表卡片（markdown → HTML 预览） |
@@ -280,7 +280,7 @@ Obsidian 从零实现的逻辑。clean-room 重写时需要逐项重新实现。
 
 | # | 决策 | 结论 | 日期 |
 |---|------|------|------|
-| D1 | 项目名称 | `xlxz-markdown-editor` | 2025-07 |
+| D1 | 项目名称 | `@xlxz/markdown-editor` | 2025-07 |
 | D2 | 架构模式 | 微内核 + 插件系统 | 2025-07 |
 | D3 | 包管理 | bun workspaces | 2025-07 |
 | D4 | 验证项目 | `apps/web`（Vite + 纯 HTML） | 2025-07 |
@@ -290,7 +290,7 @@ Obsidian 从零实现的逻辑。clean-room 重写时需要逐项重新实现。
 | D8 | 链接行为 | 完全由外部回调控制（`onLinkClick` / `onExternalLinkClick`） | 2025-07 |
 | D9 | HTML 输出 | 不内置 `getHTML()`——markdown 是唯一真相源，需要 HTML 由外部用第三方 parser 生成 | 2025-07 |
 | D10 | 法律路径 | 当前使用 Obsidian 提取物（内部使用），通过依赖恢复策略（识别 vendor 内嵌 npm 包，逐步替换为同版本 npm import）替代 clean-room 重写 | 2026-05 |
-| D11 | import 风格 | 命名导出 `import { createEditor } from 'xlxz-markdown-editor'` | 2025-07 |
+| D11 | import 风格 | 命名导出 `import { createEditor } from '@xlxz/markdown-editor'` | 2025-07 |
 | D12 | 字体/脚本加载 | 通过 `AssetLoader` 接口依赖注入，适配 Tauri file:// 协议 | 2025-07 |
 
 ---
@@ -319,7 +319,7 @@ Obsidian 从零实现的逻辑。clean-room 重写时需要逐项重新实现。
 │   └── negative_adr_template.md
 ├── packages/
 │   └── core/
-│       ├── package.json      # "xlxz-markdown-editor"
+│       ├── package.json      # "@xlxz/markdown-editor"
 │       ├── tsconfig.json
 │       ├── src/
 │       │   ├── index.ts      # 公开 API 入口

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { createEditor } from 'xlxz-markdown-editor';
-import type { EditorInstance, EditorBackend } from 'xlxz-markdown-editor';
+import { createEditor } from '@xlxz/markdown-editor';
+import type { EditorInstance, EditorBackend } from '@xlxz/markdown-editor';
 import demoDoc from './demo-doc.md?raw';
 
 const editorContainer = ref<HTMLElement>();
