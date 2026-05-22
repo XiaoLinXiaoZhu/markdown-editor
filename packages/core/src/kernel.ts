@@ -9,7 +9,7 @@
  *
  * 所有编辑功能通过插件实现，内核不包含任何具体功能逻辑。
  */
-import type { EditorBackend, EditorOptions, EditorInstance, EditorPlugin, PluginContext, SuggestConfig } from './types.js';
+import type { EditorBackend, EditorOptions, EditorInstance, EditorPlugin, PluginContext, SuggestConfig, EditorMode } from './types.js';
 import type { CompletionProvider } from './plugins/types.js';
 import { defaultBackend, defaultOptions } from './defaults.js';
 import { createMockOwner, createMockApp, createMockEditor } from './mocks.js';
@@ -51,6 +51,7 @@ export function createEditor(
   // 预设内部状态供 base-extensions 插件访问
   pluginStates.set('__mockEditor', mockEditor);
   pluginStates.set('__mockOwner', mockOwner);
+  let currentMode: EditorMode = 'ir';
 
   function makeContext(): PluginContext {
     return {
@@ -173,6 +174,46 @@ export function createEditor(
     use,
     unuse,
     registerSuggest,
+    setTheme(theme: 'dark' | 'light') {
+      if (theme === 'light') {
+        container.classList.add('theme-light');
+        container.classList.remove('theme-dark');
+      } else {
+        container.classList.add('theme-dark');
+        container.classList.remove('theme-light');
+      }
+      document.body.classList.toggle('theme-dark', theme === 'dark');
+      document.body.classList.toggle('theme-light', theme === 'light');
+    },
+    setMode(mode: EditorMode) {
+      if (mode === currentMode) return;
+      currentMode = mode;
+      const { EditorView: EV, Compartment } = (window as any).__cm6;
+
+      // Toggle live-preview class (controls CSS-based syntax hiding)
+      if (mode === 'ir' || mode === 'view') {
+        container.classList.add('is-live-preview');
+        container.classList.remove('is-source-mode');
+      } else {
+        container.classList.remove('is-live-preview');
+        container.classList.add('is-source-mode');
+      }
+
+      // Toggle readonly for view mode
+      view.dispatch({
+        effects: (window as any).__cm6.StateEffect.appendConfig.of(
+          EV.editable.of(mode !== 'view')
+        ),
+      });
+
+      // Force re-render decorations
+      view.dispatch({
+        effects: (window as any).__cm6.StateEffect.appendConfig.of([]),
+      });
+    },
+    getMode() {
+      return currentMode;
+    },
   };
 
   return instance;

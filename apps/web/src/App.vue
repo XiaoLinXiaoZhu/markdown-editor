@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { createEditor } from '@xlxz/markdown-editor';
-import type { EditorInstance, EditorBackend } from '@xlxz/markdown-editor';
+import type { EditorInstance, EditorBackend, EditorMode } from '@xlxz/markdown-editor';
 import demoDoc from './demo-doc.md?raw';
 
 const editorContainer = ref<HTMLElement>();
@@ -10,6 +10,8 @@ const status = ref<{ text: string; state: 'loading' | 'ok' | 'err' }>({
   state: 'loading',
 });
 const callbackLog = ref('');
+const currentMode = ref<EditorMode>('ir');
+const currentTheme = ref<'dark' | 'light'>('dark');
 
 let editor: EditorInstance | null = null;
 let suggestCleanup: (() => void) | null = null;
@@ -37,6 +39,18 @@ function setCallbackLog(msg: string) {
     callbackLog.value = '';
     callbackTimer = null;
   }, 3000);
+}
+
+function switchMode(mode: EditorMode) {
+  if (!editor) return;
+  editor.setMode(mode);
+  currentMode.value = mode;
+}
+
+function switchTheme(theme: 'dark' | 'light') {
+  if (!editor) return;
+  editor.setTheme(theme);
+  currentTheme.value = theme;
 }
 
 function tryMount(attempt: number = 0) {
@@ -119,7 +133,39 @@ onMounted(() => {
 
 <template>
   <div id="toolbar">
-    <span>xlxz-markdown-editor</span>
+    <span class="title">@xlxz/markdown-editor</span>
+
+    <div class="btn-group">
+      <button
+        :class="{ active: currentMode === 'ir' }"
+        @click="switchMode('ir')"
+        title="即时渲染 (Live Preview)"
+      >IR</button>
+      <button
+        :class="{ active: currentMode === 'raw' }"
+        @click="switchMode('raw')"
+        title="源码模式 (Source)"
+      >RAW</button>
+      <button
+        :class="{ active: currentMode === 'view' }"
+        @click="switchMode('view')"
+        title="阅读模式 (Reading)"
+      >VIEW</button>
+    </div>
+
+    <div class="btn-group">
+      <button
+        :class="{ active: currentTheme === 'light' }"
+        @click="switchTheme('light')"
+        title="亮色主题"
+      >Light</button>
+      <button
+        :class="{ active: currentTheme === 'dark' }"
+        @click="switchTheme('dark')"
+        title="暗色主题"
+      >Dark</button>
+    </div>
+
     <span class="status" :class="status.state">{{ status.text }}</span>
     <span class="callback-log">{{ callbackLog }}</span>
   </div>
@@ -162,6 +208,10 @@ body {
   gap: 12px;
   background: var(--background-secondary, #1e1e1e);
 }
+#toolbar .title {
+  font-weight: 600;
+  color: var(--text-normal, #ddd);
+}
 #toolbar .status { margin-left: auto; }
 #toolbar .status.ok { color: var(--text-success, #4caf50); }
 #toolbar .status.err { color: var(--text-error, #f44336); }
@@ -169,6 +219,35 @@ body {
   font-size: 12px;
   color: var(--text-accent, #7f6df2);
   margin-left: 8px;
+}
+
+.btn-group {
+  display: flex;
+  gap: 0;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid var(--background-modifier-border, #454545);
+}
+.btn-group button {
+  padding: 3px 10px;
+  border: none;
+  background: var(--background-primary, #1e1e1e);
+  color: var(--text-muted, #999);
+  cursor: pointer;
+  font-size: 12px;
+  font-family: var(--font-interface);
+  transition: all 0.15s;
+}
+.btn-group button:not(:last-child) {
+  border-right: 1px solid var(--background-modifier-border, #454545);
+}
+.btn-group button:hover {
+  background: var(--background-modifier-hover, #2a2a2a);
+  color: var(--text-normal, #ddd);
+}
+.btn-group button.active {
+  background: var(--interactive-accent, #7f6df2);
+  color: #fff;
 }
 
 .view-content {
