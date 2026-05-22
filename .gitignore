@@ -48,3 +48,6 @@ ref/
 
 # Dev app vendor copy
 apps/web/public/vendor/
+
+# npm auth
+.npmrc

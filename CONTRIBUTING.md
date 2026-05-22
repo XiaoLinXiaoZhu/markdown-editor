@@ -28,3 +28,36 @@
 
 - 提交信息应说明改了什么以及为什么（中文或英文均可）
 - 不应包含「任务级上下文」（如「为 X 功能添加」），这些信息属于文档范畴
+
+## CHANGELOG 管理
+
+本项目使用 [Keep a Changelog](https://keepachangelog.com/) 格式维护 `CHANGELOG.md`。
+
+### 规则
+
+1. **每个有意义的变更**都应在 `CHANGELOG.md` 的 `## [Unreleased]` 区域追加条目
+2. 条目按类型分组：`Added`、`Changed`、`Fixed`、`Removed`、`Breaking Changes`
+3. 发版时将 `[Unreleased]` 重命名为版本号 + 日期（如 `## [2.1.0] — 2026-06`）
+4. 条目应面向使用者编写——说明行为变化，而非实现细节
+
+### 什么需要记录
+
+- 新增功能（`Added`）
+- API 变更或行为变更（`Changed`）
+- Bug 修复（`Fixed`）
+- 移除的功能（`Removed`）
+- 不兼容变更（`Breaking Changes`）
+
+### 什么不需要记录
+
+- 纯重构（不改变外部行为）
+- 测试变更
+- 文档更新
+- CI/CD 配置变更
+
+### 提交与 CHANGELOG 的关系
+
+提交信息使用 Conventional Commits 格式（`feat:` / `fix:` / `refactor:` 等）。CHANGELOG 条目从提交信息中提炼，但措辞面向使用者而非开发者。例如：
+
+- Commit: `feat(table): 表格智能续行——Enter 插入空行 / 空行退出 + 自动格式化`
+- CHANGELOG: `**Table continuation**: pressing Enter in a table row inserts an empty row; pressing Enter on an empty row exits the table`
