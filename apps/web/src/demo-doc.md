@@ -35,6 +35,18 @@ Inline `code` looks like this.
 1. First ordered
 2. Second ordered
 
+## Table
+
+| Feature        | Status | Notes              |
+| -------------- | ------ | ------------------ |
+| Live Preview   | ✅     | Obsidian-quality   |
+| Plugin System  | ✅     | 18 built-in plugins|
+| Table Editing  | ✅     | Auto-format + Enter|
+| Math Rendering | ✅     | MathJax            |
+| Wiki Links     | ✅     | `[[link]]` syntax  |
+
+---
+
 ## Code Block
 
 ```javascript
