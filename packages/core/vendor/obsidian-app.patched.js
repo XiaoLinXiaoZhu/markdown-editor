@@ -42056,7 +42056,7 @@ window.require = function (m) {
               return new Promise(function (t, n) {
                 var i = document.createElement("script");
                 i.type = "text/javascript";
-                i.src = e;
+                i.src = (window.__assetBase || '') + e; // [PATCHED] prepend configurable base path for sub-path deployments (e.g. GitHub Pages)
                 i.addEventListener("load", function () {
                   return t(i);
                 });

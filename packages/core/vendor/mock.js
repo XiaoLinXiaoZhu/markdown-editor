@@ -7,7 +7,7 @@ window.OBSIDIAN_DEFAULT_I18N = {};
 i18next.init({ fallbackLng: 'en', ns: ['app'], defaultNS: 'app', initImmediate: false, interpolation: { escapeValue: false } });
 
 // Load translation bundle asynchronously
-fetch('/i18n/en.json')
+fetch((window.__assetBase || '') + '/i18n/en.json') // [PATCHED] use configurable base path
   .then(r => r.json())
   .then(data => {
     window.OBSIDIAN_DEFAULT_I18N = data;

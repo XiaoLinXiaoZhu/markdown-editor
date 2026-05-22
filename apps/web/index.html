@@ -8,6 +8,9 @@
 <body class="theme-dark">
 <div id="app"></div>
 
+<!-- 设置资源基路径，供 vendor 脚本运行时加载子资源（MathJax 等）使用 -->
+<script>window.__assetBase = new URL('.', window.location.href).pathname.replace(/\/$/, '');</script>
+
 <!-- Obsidian 运行时（顺序重要） -->
 <script src="/vendor/lib/i18next.min.js"></script>
 <script src="/vendor/lib/codemirror.js"></script>
