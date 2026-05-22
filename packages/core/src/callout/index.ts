@@ -100,10 +100,19 @@ export function createCalloutExtension() {
             if (match) {
               const title = match[1]?.trim();
               const label = title || capitalizeFirst(callout.type);
+              // Hide `> ` prefix (transparent but occupies space) — same as body lines
+              const prefixMatch = text.match(/^>\s?/);
+              const prefixLen = prefixMatch ? prefixMatch[0].length : 0;
+              if (prefixLen > 0) {
+                builder.push(
+                  Decoration.mark({ class: 'cm-callout-hide' }).range(line.from, line.from + prefixLen)
+                );
+              }
+              // Widget replaces only the content after prefix
               builder.push(
                 Decoration.replace({
                   widget: new CalloutHeaderWidget(callout.type, label),
-                }).range(line.from, line.to)
+                }).range(line.from + prefixLen, line.to)
               );
             }
           } else if (lineNum !== callout.firstLine && !isLineActive) {
