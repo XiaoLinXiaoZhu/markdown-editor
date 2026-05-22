@@ -48,6 +48,7 @@ export {
   linkHandlerPlugin,
   attachmentPlugin,
   tablePlugin,
+  calloutPlugin,
   tableContinuationPlugin,
   themePlugin,
   baseExtensionsPlugin,

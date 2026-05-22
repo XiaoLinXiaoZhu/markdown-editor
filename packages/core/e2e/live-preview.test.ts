@@ -311,22 +311,23 @@ describe('Live Preview 渲染', () => {
       await setDoc('> [!NOTE]\n> This is a note callout\n\nnormal text');
     });
 
-    test('光标离开：显示为带图标的提示块', async () => {
+    test('光标离开：显示为带底色的行内渲染', async () => {
       await clickLine(4, 0);
       await waitForStable();
-      // Callout 作为 embed-block widget 渲染（不在 .cm-line 内）
+      // Callout 使用 line decoration 渲染（保留在 .cm-line 内）
       const page = getPage();
       const calloutInfo = await page.evaluate(() => {
-        const wrapper = document.querySelector('.cm-callout');
-        const inner = document.querySelector('[data-callout]');
+        const firstLine = document.querySelector('.cm-callout-first');
+        const icon = document.querySelector('.cm-callout-icon-widget');
         return {
-          wrapperExists: wrapper !== null,
-          innerExists: inner !== null,
-          dataCallout: inner?.getAttribute('data-callout') || '',
+          firstLineExists: firstLine !== null,
+          iconExists: icon !== null,
+          hasNoteClass: firstLine?.classList.contains('cm-callout-note') || false,
         };
       });
-      expect(calloutInfo.wrapperExists).toBe(true);
-      expect(calloutInfo.dataCallout).toBe('note');
+      expect(calloutInfo.firstLineExists).toBe(true);
+      expect(calloutInfo.iconExists).toBe(true);
+      expect(calloutInfo.hasNoteClass).toBe(true);
     });
   });
 

@@ -22,6 +22,7 @@ export { suggestPlugin } from './suggest.js';
 export { linkHandlerPlugin } from './link-handler.js';
 export { attachmentPlugin } from './attachment.js';
 export { tablePlugin } from './table.js';
+export { calloutPlugin } from './callout.js';
 export { tableContinuationPlugin } from './table-continuation.js';
 
 // Infrastructure

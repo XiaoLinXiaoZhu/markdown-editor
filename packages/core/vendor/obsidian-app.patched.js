@@ -91610,12 +91610,12 @@ ${a}`);
             if (Q) {
               var J;
               var ee = Q.split(" ");
-              if ((J = new Set(ee)).has("HyperMD-callout") && J.has("HyperMD-quote-1")) {
+              (J = new Set(ee)); if (false /* callout widget disabled — using plain text extension */ && J.has("HyperMD-callout") && J.has("HyperMD-quote-1")) {
                 Y(r);
                 U = r;
                 _ = a;
               }
-              if (J.has("HyperMD-quote") && U !== -1) {
+              if (false /* callout widget disabled */ && J.has("HyperMD-quote") && U !== -1) {
                 if (r - _ > 1) {
                   Y(r);
                 } else {
