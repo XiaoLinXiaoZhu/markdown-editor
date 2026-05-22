@@ -21,11 +21,11 @@ export function createCalloutTheme(EditorView: any) {
     '.cm-content .cm-line.cm-callout-first': {
       borderTopLeftRadius: 'var(--callout-radius, var(--radius-s))',
       borderTopRightRadius: 'var(--callout-radius, var(--radius-s))',
-      // 上下各半行 padding
       paddingTop: 'calc(var(--line-height-normal, 1.5) * var(--font-text-size, 16px) * 0.5)',
       paddingBottom: 'calc(var(--line-height-normal, 1.5) * var(--font-text-size, 16px) * 0.5)',
-      // Force consistent content height regardless of widget vs raw text
-      lineHeight: 'calc(var(--line-height-normal, 1.5) * var(--font-text-size, 16px))',
+      // Fixed height prevents widget buffer from causing 2px jump
+      height: 'calc(var(--line-height-normal, 1.5) * var(--font-text-size, 16px) * 2)',
+      boxSizing: 'border-box',
     },
     // 首行非激活：标题颜色 + 加粗（正常字号）
     '.cm-content .cm-line.cm-callout-first:not(.cm-callout-active)': {
@@ -58,8 +58,9 @@ export function createCalloutTheme(EditorView: any) {
     '.cm-callout-header-widget': {
       display: 'inline-flex',
       alignItems: 'center',
-      gap: '0.4em',
-      verticalAlign: 'baseline',
+      gap: '0.5ch',
+      marginRight: '1ch',
+      verticalAlign: 'middle',
       color: 'rgb(var(--callout-line-color, var(--callout-default)))',
     },
     '.cm-callout-icon': {
