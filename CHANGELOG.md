@@ -6,6 +6,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Generated from `
 
 ---
 
+## [2.1.2]
+
+### Fixed
+
+- MathJax and other lazily-loaded vendor assets (Prism, Mermaid, etc.) now resolve correctly on GitHub Pages sub-path deployments via `window.__assetBase` runtime prefix
+
+---
+
 ## [2.1.1]
 
 ### Removed
