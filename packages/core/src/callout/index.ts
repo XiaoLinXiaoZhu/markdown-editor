@@ -3,13 +3,12 @@
  *
  * 设计：
  * - 首行（`> [!TYPE] title`）：
- *   非激活：icon + 标题文字，约2行高，垂直居中，h3 字号
- *   激活：显示原始 `> [!TYPE] title`，保持相同行高（垂直居中）
- * - 中间行：带底色，非激活时隐藏 `> ` 前缀（replace decoration）
+ *   非激活：icon + 标题文字（正常字号、加粗、类型颜色），上下各半行 padding
+ *   激活：显示原始 `> [!TYPE] title`，保持相同 padding
+ * - 中间行：带底色，非激活时 `> ` 前缀透明但占位
  * - 末行：额外 padding-bottom 半行
  * - 所有行正常显示行号
- * - 圆角矩形通过首行/末行 border-radius
- * - 非激活行 `>` 隐藏由 CSS 透明色控制（formatting-quote span）
+ * - 去掉 blockquote 竖条（通过 CSS 隐藏 ::before）
  */
 
 import { findCalloutRanges, cursorInCallout, cursorOnLine } from './detect.js';
@@ -18,8 +17,8 @@ import { createCalloutTheme } from './theme.js';
 export function createCalloutExtension() {
   const { EditorView, ViewPlugin, Decoration, WidgetType } = (window as any).__cm6;
 
-  // --- Icon widget for non-active first line ---
-  class CalloutIconWidget extends WidgetType {
+  // --- Header widget: icon + optional type label ---
+  class CalloutHeaderWidget extends WidgetType {
     type: string;
     label: string;
     constructor(type: string, label: string) {
@@ -28,19 +27,24 @@ export function createCalloutExtension() {
       this.label = label;
     }
     toDOM() {
-      const span = document.createElement('span');
-      span.className = 'cm-callout-icon-widget';
-      span.setAttribute('aria-hidden', 'true');
-      span.innerHTML = getCalloutIcon(this.type);
+      const wrapper = document.createElement('span');
+      wrapper.className = 'cm-callout-header-widget';
+      wrapper.setAttribute('aria-hidden', 'true');
+      // Icon
+      const iconEl = document.createElement('span');
+      iconEl.className = 'cm-callout-icon';
+      iconEl.innerHTML = getCalloutIcon(this.type);
+      wrapper.appendChild(iconEl);
+      // Label (type name as fallback when no custom title)
       if (this.label) {
         const labelEl = document.createElement('span');
         labelEl.className = 'cm-callout-title-label';
         labelEl.textContent = this.label;
-        span.appendChild(labelEl);
+        wrapper.appendChild(labelEl);
       }
-      return span;
+      return wrapper;
     }
-    eq(other: CalloutIconWidget) {
+    eq(other: CalloutHeaderWidget) {
       return this.type === other.type && this.label === other.label;
     }
     ignoreEvent() { return true; }
@@ -67,7 +71,6 @@ export function createCalloutExtension() {
       const builder: any[] = [];
 
       for (const callout of callouts) {
-        const isActive = cursorInCallout(state, callout);
         const typeClass = `cm-callout-${callout.type}`;
 
         for (let lineNum = callout.firstLine; lineNum <= callout.lastLine; lineNum++) {
@@ -87,28 +90,27 @@ export function createCalloutExtension() {
           );
 
           if (lineNum === callout.firstLine && !isLineActive) {
-            // Non-active first line: replace `> [!TYPE] ` with icon widget
+            // Non-active first line: replace `> [!TYPE] ` with header widget
             const text = line.text;
             const match = text.match(/^>\s*\[!\w+\]\s*/);
             if (match) {
               const syntaxEnd = line.from + match[0].length;
               const remaining = text.slice(match[0].length).trim();
-              // If no title text remains, show the type name as label
               const label = remaining ? '' : capitalizeFirst(callout.type);
               builder.push(
                 Decoration.replace({
-                  widget: new CalloutIconWidget(callout.type, label),
+                  widget: new CalloutHeaderWidget(callout.type, label),
                 }).range(line.from, syntaxEnd)
               );
             }
           } else if (lineNum !== callout.firstLine && !isLineActive) {
-            // Non-active body/last line: hide `> ` prefix with replace
+            // Non-active body/last line: hide `> ` with mark (transparent but occupies space)
             const text = line.text;
             const match = text.match(/^>\s?/);
             if (match) {
               const prefixEnd = line.from + match[0].length;
               builder.push(
-                Decoration.replace({}).range(line.from, prefixEnd)
+                Decoration.mark({ class: 'cm-callout-hide' }).range(line.from, prefixEnd)
               );
             }
           }
@@ -128,7 +130,6 @@ export function createCalloutExtension() {
 }
 
 function getCalloutIcon(type: string): string {
-  // All icons use currentColor so they inherit from parent .cm-callout-icon-widget color
   const icons: Record<string, string> = {
     note: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>',
     info: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',

@@ -1,101 +1,110 @@
 /**
  * Callout 主题样式
  *
- * 行内 decoration 实现 callout 渲染：
- * - 首行：icon + 标题（约2行高），用 padding 实现垂直居中
- * - 中间行：带底色，非激活行隐藏 `> ` 前缀
- * - 末行：额外 padding-bottom 半行高
- * - 圆角矩形背景
+ * 选择器使用 `.cm-content .cm-line.cm-callout-*` 提升特异度 (0,4,0+)，
+ * 确保覆盖 Obsidian 的 HyperMD-quote 和 .cm-line 默认样式。
  */
 
 export function createCalloutTheme(EditorView: any) {
   return EditorView.baseTheme({
     // --- 所有 callout 行共通 ---
-    '.cm-callout-line': {
+    '.cm-content .cm-line.cm-callout-line.cm-callout-line': {
       backgroundColor: 'rgba(var(--callout-line-color, var(--callout-default)), 0.1)',
     },
 
+    // --- 隐藏 blockquote 竖条（::before 伪元素） ---
+    '.cm-content .cm-line.cm-callout-line::before': {
+      display: 'none !important',
+    },
+
     // --- 首行 ---
-    '.cm-callout-first': {
+    '.cm-content .cm-line.cm-callout-first': {
       borderTopLeftRadius: 'var(--callout-radius, var(--radius-s))',
       borderTopRightRadius: 'var(--callout-radius, var(--radius-s))',
-      // 上下各半行 padding，使总高度约为2行，内容自然居中
-      paddingTop: '0.75em',
-      paddingBottom: '0.75em',
+      // 上下各半行 padding
+      paddingTop: 'calc(var(--line-height-normal, 1.5) * var(--font-text-size, 16px) * 0.5)',
+      paddingBottom: 'calc(var(--line-height-normal, 1.5) * var(--font-text-size, 16px) * 0.5)',
+      // Force consistent content height regardless of widget vs raw text
+      lineHeight: 'calc(var(--line-height-normal, 1.5) * var(--font-text-size, 16px))',
     },
-    // 首行非激活：标题样式
-    '.cm-callout-first:not(.cm-callout-active)': {
-      fontSize: 'var(--h3-size, 1.25em)',
+    // 首行非激活：标题颜色 + 加粗（正常字号）
+    '.cm-content .cm-line.cm-callout-first:not(.cm-callout-active)': {
       fontWeight: 'var(--callout-title-weight, 600)',
       color: 'rgb(var(--callout-line-color, var(--callout-default)))',
     },
-    // 首行激活：保持同样 padding（同高度），正常字号
-    '.cm-callout-first.cm-callout-active': {
-      fontSize: 'inherit',
+    // 首行激活：正常样式
+    '.cm-content .cm-line.cm-callout-first.cm-callout-active': {
       fontWeight: 'inherit',
       color: 'inherit',
     },
 
     // --- 末行 ---
-    '.cm-callout-last': {
+    '.cm-content .cm-line.cm-callout-last': {
       borderBottomLeftRadius: 'var(--callout-radius, var(--radius-s))',
       borderBottomRightRadius: 'var(--callout-radius, var(--radius-s))',
-      paddingBottom: '0.75em',
+      paddingBottom: 'calc(var(--line-height-normal, 1.5) * var(--font-text-size, 16px) * 0.5)',
     },
-    // 如果首行同时也是末行（单行 callout）
-    '.cm-callout-first.cm-callout-last': {
+    // 首行同时也是末行
+    '.cm-content .cm-line.cm-callout-first.cm-callout-last': {
       borderRadius: 'var(--callout-radius, var(--radius-s))',
     },
 
-    // --- Icon widget ---
-    '.cm-callout-icon-widget': {
+    // --- `>` 前缀占位但透明 ---
+    '.cm-content .cm-line.cm-callout-line .cm-callout-hide': {
+      color: 'transparent',
+    },
+
+    // --- Header widget (icon + optional label) ---
+    '.cm-callout-header-widget': {
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: '0.4em',
+      verticalAlign: 'baseline',
+      color: 'rgb(var(--callout-line-color, var(--callout-default)))',
+    },
+    '.cm-callout-icon': {
       display: 'inline-flex',
       alignItems: 'center',
       justifyContent: 'center',
-      width: '1.4em',
-      height: '1.4em',
-      marginRight: '0.35em',
-      verticalAlign: 'middle',
-      color: 'rgb(var(--callout-line-color, var(--callout-default)))',
+      width: '1em',
+      height: '1em',
+      flexShrink: '0',
     },
-    '.cm-callout-icon-widget svg': {
+    '.cm-callout-icon svg': {
       width: '100%',
       height: '100%',
     },
-
-    // Title label (shown when no custom title text exists)
     '.cm-callout-title-label': {
-      marginLeft: '0.2em',
-      verticalAlign: 'middle',
+      whiteSpace: 'nowrap',
     },
 
     // --- Type-specific colors ---
-    '.cm-callout-note': { '--callout-line-color': 'var(--callout-info)' },
-    '.cm-callout-info': { '--callout-line-color': 'var(--callout-info)' },
-    '.cm-callout-tip': { '--callout-line-color': 'var(--callout-tip)' },
-    '.cm-callout-hint': { '--callout-line-color': 'var(--callout-tip)' },
-    '.cm-callout-warning': { '--callout-line-color': 'var(--callout-warning)' },
-    '.cm-callout-caution': { '--callout-line-color': 'var(--callout-warning)' },
-    '.cm-callout-attention': { '--callout-line-color': 'var(--callout-warning)' },
-    '.cm-callout-danger': { '--callout-line-color': 'var(--callout-error)' },
-    '.cm-callout-error': { '--callout-line-color': 'var(--callout-error)' },
-    '.cm-callout-bug': { '--callout-line-color': 'var(--callout-bug)' },
-    '.cm-callout-success': { '--callout-line-color': 'var(--callout-success)' },
-    '.cm-callout-check': { '--callout-line-color': 'var(--callout-success)' },
-    '.cm-callout-done': { '--callout-line-color': 'var(--callout-success)' },
-    '.cm-callout-question': { '--callout-line-color': 'var(--callout-question)' },
-    '.cm-callout-help': { '--callout-line-color': 'var(--callout-question)' },
-    '.cm-callout-faq': { '--callout-line-color': 'var(--callout-question)' },
-    '.cm-callout-example': { '--callout-line-color': 'var(--callout-example)' },
-    '.cm-callout-abstract': { '--callout-line-color': 'var(--callout-summary)' },
-    '.cm-callout-summary': { '--callout-line-color': 'var(--callout-summary)' },
-    '.cm-callout-tldr': { '--callout-line-color': 'var(--callout-summary)' },
-    '.cm-callout-important': { '--callout-line-color': 'var(--callout-important)' },
-    '.cm-callout-todo': { '--callout-line-color': 'var(--callout-todo)' },
-    '.cm-callout-fail': { '--callout-line-color': 'var(--callout-fail)' },
-    '.cm-callout-failure': { '--callout-line-color': 'var(--callout-fail)' },
-    '.cm-callout-missing': { '--callout-line-color': 'var(--callout-fail)' },
-    '.cm-callout-quote': { '--callout-line-color': 'var(--callout-quote)' },
-    '.cm-callout-cite': { '--callout-line-color': 'var(--callout-quote)' },
+    '.cm-content .cm-line.cm-callout-note': { '--callout-line-color': 'var(--callout-info)' },
+    '.cm-content .cm-line.cm-callout-info': { '--callout-line-color': 'var(--callout-info)' },
+    '.cm-content .cm-line.cm-callout-tip': { '--callout-line-color': 'var(--callout-tip)' },
+    '.cm-content .cm-line.cm-callout-hint': { '--callout-line-color': 'var(--callout-tip)' },
+    '.cm-content .cm-line.cm-callout-warning': { '--callout-line-color': 'var(--callout-warning)' },
+    '.cm-content .cm-line.cm-callout-caution': { '--callout-line-color': 'var(--callout-warning)' },
+    '.cm-content .cm-line.cm-callout-attention': { '--callout-line-color': 'var(--callout-warning)' },
+    '.cm-content .cm-line.cm-callout-danger': { '--callout-line-color': 'var(--callout-error)' },
+    '.cm-content .cm-line.cm-callout-error': { '--callout-line-color': 'var(--callout-error)' },
+    '.cm-content .cm-line.cm-callout-bug': { '--callout-line-color': 'var(--callout-bug)' },
+    '.cm-content .cm-line.cm-callout-success': { '--callout-line-color': 'var(--callout-success)' },
+    '.cm-content .cm-line.cm-callout-check': { '--callout-line-color': 'var(--callout-success)' },
+    '.cm-content .cm-line.cm-callout-done': { '--callout-line-color': 'var(--callout-success)' },
+    '.cm-content .cm-line.cm-callout-question': { '--callout-line-color': 'var(--callout-question)' },
+    '.cm-content .cm-line.cm-callout-help': { '--callout-line-color': 'var(--callout-question)' },
+    '.cm-content .cm-line.cm-callout-faq': { '--callout-line-color': 'var(--callout-question)' },
+    '.cm-content .cm-line.cm-callout-example': { '--callout-line-color': 'var(--callout-example)' },
+    '.cm-content .cm-line.cm-callout-abstract': { '--callout-line-color': 'var(--callout-summary)' },
+    '.cm-content .cm-line.cm-callout-summary': { '--callout-line-color': 'var(--callout-summary)' },
+    '.cm-content .cm-line.cm-callout-tldr': { '--callout-line-color': 'var(--callout-summary)' },
+    '.cm-content .cm-line.cm-callout-important': { '--callout-line-color': 'var(--callout-important)' },
+    '.cm-content .cm-line.cm-callout-todo': { '--callout-line-color': 'var(--callout-todo)' },
+    '.cm-content .cm-line.cm-callout-fail': { '--callout-line-color': 'var(--callout-fail)' },
+    '.cm-content .cm-line.cm-callout-failure': { '--callout-line-color': 'var(--callout-fail)' },
+    '.cm-content .cm-line.cm-callout-missing': { '--callout-line-color': 'var(--callout-fail)' },
+    '.cm-content .cm-line.cm-callout-quote': { '--callout-line-color': 'var(--callout-quote)' },
+    '.cm-content .cm-line.cm-callout-cite': { '--callout-line-color': 'var(--callout-quote)' },
   });
 }
