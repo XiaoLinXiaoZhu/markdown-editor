@@ -3,6 +3,9 @@
   "version": "2.1.0",
   "private": true,
   "type": "module",
+  "scripts": {
+    "changelog": "bun run scripts/build-changelog.ts"
+  },
   "workspaces": [
     "packages/core",
     "apps/web"

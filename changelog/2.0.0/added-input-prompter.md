@@ -1,0 +1,1 @@
+**Input Prompter** (`suggest` plugin): multi-provider completion framework — multiple `CompletionProvider` instances share a single popup UI, supports `[[` wiki-link, `#` tag, `/` command, or any custom trigger

@@ -31,22 +31,58 @@
 
 ## CHANGELOG 管理
 
-本项目使用 [Keep a Changelog](https://keepachangelog.com/) 格式维护 `CHANGELOG.md`。
+本项目使用**原子化片段**管理 CHANGELOG。每个变更一个文件，发版时自动拼接。
 
-### 规则
+### 目录结构
 
-1. **每个有意义的变更**都应在 `CHANGELOG.md` 的 `## [Unreleased]` 区域追加条目
-2. 条目按类型分组：`Added`、`Changed`、`Fixed`、`Removed`、`Breaking Changes`
-3. 发版时将 `[Unreleased]` 重命名为版本号 + 日期（如 `## [2.1.0] — 2026-06`）
-4. 条目应面向使用者编写——说明行为变化，而非实现细节
+```
+changelog/
+├── unreleased/          # 下个版本的变更（尚未发布）
+│   ├── added-xxx.md
+│   └── fixed-yyy.md
+├── 2.1.0/               # 已发布版本
+│   ├── added-set-mode.md
+│   └── fixed-table-colors.md
+└── 2.0.0/
+    ├── breaking-rename-package.md
+    └── added-microkernel.md
+```
+
+### 片段文件命名
+
+```
+<type>-<name>.md
+```
+
+- `type`：`breaking` | `added` | `changed` | `fixed` | `removed`
+- `name`：简短描述（kebab-case）
+
+### 片段内容
+
+直接写变更说明（一行或多行），面向使用者。例如：
+
+```markdown
+`editor.setMode(mode)` — switch between IR, RAW, VIEW modes
+```
+
+### 工作流
+
+1. **开发时**：在 `changelog/unreleased/` 下创建片段文件
+2. **发版时**：将 `unreleased/` 重命名为版本号目录，运行 `bun run changelog`
+3. **生成结果**：脚本读取所有片段，按版本降序 + 类型分组，输出 `CHANGELOG.md`
+
+```bash
+# 生成 CHANGELOG.md
+bun run changelog
+```
 
 ### 什么需要记录
 
-- 新增功能（`Added`）
-- API 变更或行为变更（`Changed`）
-- Bug 修复（`Fixed`）
-- 移除的功能（`Removed`）
-- 不兼容变更（`Breaking Changes`）
+- 新增功能（`added-*`）
+- API 变更或行为变更（`changed-*`）
+- Bug 修复（`fixed-*`）
+- 移除的功能（`removed-*`）
+- 不兼容变更（`breaking-*`）
 
 ### 什么不需要记录
 
@@ -54,10 +90,3 @@
 - 测试变更
 - 文档更新
 - CI/CD 配置变更
-
-### 提交与 CHANGELOG 的关系
-
-提交信息使用 Conventional Commits 格式（`feat:` / `fix:` / `refactor:` 等）。CHANGELOG 条目从提交信息中提炼，但措辞面向使用者而非开发者。例如：
-
-- Commit: `feat(table): 表格智能续行——Enter 插入空行 / 空行退出 + 自动格式化`
-- CHANGELOG: `**Table continuation**: pressing Enter in a table row inserts an empty row; pressing Enter on an empty row exits the table`
