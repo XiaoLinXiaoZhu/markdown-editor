@@ -4,10 +4,14 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "changelog": "bun run scripts/build-changelog.ts"
+    "changelog": "bun run scripts/build-changelog.ts",
+    "prepare": "husky"
   },
   "workspaces": [
     "packages/core",
     "apps/web"
-  ]
+  ],
+  "devDependencies": {
+    "husky": "^9.1.7"
+  }
 }

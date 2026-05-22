@@ -28,8 +28,6 @@ Thumbs.db
 *.log
 npm-debug.log*
 
-# Bun
-bun.lock
 
 # Test coverage
 coverage/

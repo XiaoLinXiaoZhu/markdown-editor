@@ -4,7 +4,9 @@
   "description": "Obsidian-quality Markdown live preview editor — microkernel + plugin architecture. Internal use.",
   "type": "module",
   "license": "UNLICENSED",
-  "publishConfig": { "access": "public" },
+  "publishConfig": {
+    "access": "public"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -20,7 +22,8 @@
     "vendor"
   ],
   "scripts": {
-    "build": "bun build src/index.ts --outfile dist/index.js --format esm --target browser --external vue && bun build src/index.ts --outfile dist/index.cjs --format cjs --target browser --external vue && tsc -p tsconfig.json --emitDeclarationOnly --declaration && rm -f dist/kernel.d.ts dist/types.d.ts dist/defaults.d.ts dist/mocks.d.ts dist/auto-load.d.ts dist/plugin-defaults.d.ts"
+    "build": "bun build src/index.ts --outfile dist/index.js --format esm --target browser --external vue && bun build src/index.ts --outfile dist/index.cjs --format cjs --target browser --external vue && tsc -p tsconfig.json --emitDeclarationOnly --declaration && rm -f dist/kernel.d.ts dist/types.d.ts dist/defaults.d.ts dist/mocks.d.ts dist/auto-load.d.ts dist/plugin-defaults.d.ts",
+    "prepublishOnly": "cd ../.. && bun run changelog && cd packages/core && bun run build"
   },
   "peerDependencies": {
     "vue": "^3.5.0"
