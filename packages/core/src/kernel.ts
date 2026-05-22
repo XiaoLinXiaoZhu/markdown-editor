@@ -1,20 +1,19 @@
 /**
- * 内核 — createEditor()
+ * 微内核 — createEditor()
  *
- * 微内核只做三件事：
+ * 职责严格限定：
  * 1. 创建 CM6 EditorView
- * 2. 管理插件注册表
+ * 2. 管理插件注册表（use/unuse）
  * 3. 暴露文档读写接口
+ * 4. 根据 options 组装默认插件集
  *
- * 所有扩展组装、mock 构造、事件处理均委托给独立模块。
+ * 所有编辑功能通过插件实现，内核不包含任何具体功能逻辑。
  */
 import type { EditorBackend, EditorOptions, EditorInstance, EditorPlugin, PluginContext, SuggestConfig } from './types.js';
+import type { CompletionProvider } from './plugins/types.js';
 import { defaultBackend, defaultOptions } from './defaults.js';
 import { createMockOwner, createMockApp, createMockEditor } from './mocks.js';
-import { buildExtensions } from './extensions.js';
-import { setupLinkClickHandler } from './link-handler.js';
-import { setupAttachmentHandler } from './attachment.js';
-import { createSuggest } from './suggest.js';
+import { getDefaultPlugins } from './plugin-defaults.js';
 
 export { autoLoad } from './auto-load.js';
 export type { AutoLoadOptions } from './auto-load.js';
@@ -24,7 +23,7 @@ export function createEditor(
   options: EditorOptions = {},
   backend: EditorBackend = {}
 ): EditorInstance {
-  const opts = { ...defaultOptions, ...options };
+  const opts = { ...defaultOptions, ...options } as EditorOptions & typeof defaultOptions;
   const be = { ...defaultBackend, ...backend } as Required<EditorBackend>;
 
   // 验证 Obsidian 运行时已加载
@@ -35,66 +34,37 @@ export function createEditor(
     );
   }
 
-  const { EditorView, EditorState } = (window as any).__cm6;
-
-  // ── 容器准备 ──
-  const editorEl = container;
-  if (!editorEl.classList.contains('markdown-source-view')) {
-    editorEl.classList.add('markdown-source-view', 'mod-cm6', 'is-live-preview');
-  }
-  if (opts.readableLineWidth) {
-    editorEl.classList.add('is-readable-line-width');
-  }
-
-  // CSS 变量
-  if (opts.cssVariables) {
-    for (const [key, value] of Object.entries(opts.cssVariables)) {
-      const prop = key.startsWith('--') ? key : `--${key}`;
-      editorEl.style.setProperty(prop, value as string);
-    }
-  }
-
-  // 主题
-  if (opts.theme === 'light') {
-    editorEl.classList.add('theme-light');
-    editorEl.classList.remove('theme-dark');
-  } else {
-    editorEl.classList.add('theme-dark');
-    editorEl.classList.remove('theme-light');
-  }
+  const { EditorView, EditorState, StateEffect } = (window as any).__cm6;
 
   // ── 创建 EditorView ──
-  const view = new EditorView({ parent: editorEl });
+  const view = new EditorView({ parent: container });
 
-  // ── Mock 对象 ──
+  // ── Mock 对象（供 vendor 扩展使用） ──
   const mockOwner = createMockOwner(opts.filePath);
   const mockApp = createMockApp(be, opts);
-  const mockEditor = createMockEditor(mockApp, mockOwner, view, editorEl);
-
-  // ── 组装扩展 ──
-  const extensions = buildExtensions(view, editorEl, mockEditor, mockOwner, opts);
-  const fullState = EditorState.create({
-    doc: opts.doc || '',
-    extensions,
-  });
-  view.setState(fullState);
-
-  // ── 后初始化挂钩 ──
-  // ── 强制语法树重建（解决增量解析不及时的问题） ──
-  (function forceRebuild() {
-    const { syntaxTree, Transaction } = (window as any).__cm6;
-    view.dispatch({ annotations: Transaction.addToHistory.of(false) });
-    const tree = syntaxTree(view.state);
-    if (tree.length < view.state.doc.length) {
-      setTimeout(forceRebuild, 50);
-    }
-  })();
-  setupLinkClickHandler(editorEl, view, opts, be);
-  setupAttachmentHandler(view, editorEl, be);
+  const mockEditor = createMockEditor(mockApp, mockOwner, view, container);
 
   // ── 插件注册表 ──
   const pluginStates = new Map<string, any>();
   const activePlugins = new Map<string, EditorPlugin>();
+
+  // 预设内部状态供 base-extensions 插件访问
+  pluginStates.set('__mockEditor', mockEditor);
+  pluginStates.set('__mockOwner', mockOwner);
+
+  function makeContext(): PluginContext {
+    return {
+      view,
+      options: opts,
+      backend: be,
+      getState<T>(pluginId: string): T | undefined {
+        return pluginStates.get(pluginId) as T | undefined;
+      },
+      setState<T>(pluginId: string, state: T): void {
+        pluginStates.set(pluginId, state);
+      },
+    };
+  }
 
   function use(plugin: EditorPlugin): void {
     if (activePlugins.has(plugin.id)) {
@@ -108,23 +78,13 @@ export function createEditor(
         }
       }
     }
-    const ctx: PluginContext = {
-      view,
-      options: opts,
-      backend: be,
-      getState<T>(pluginId: string): T | undefined {
-        return pluginStates.get(pluginId) as T | undefined;
-      },
-      setState<T>(pluginId: string, state: T): void {
-        pluginStates.set(pluginId, state);
-      },
-    };
-
+    const ctx = makeContext();
     const ext = plugin.install(ctx);
     if (ext) {
       const exts = Array.isArray(ext) ? ext : [ext];
-      const { StateEffect } = (window as any).__cm6;
-      view.dispatch({ effects: StateEffect.appendConfig.of(exts) });
+      if (exts.length > 0) {
+        view.dispatch({ effects: StateEffect.appendConfig.of(exts) });
+      }
     }
     activePlugins.set(plugin.id, plugin);
   }
@@ -133,21 +93,59 @@ export function createEditor(
     const plugin = activePlugins.get(pluginId);
     if (!plugin) return;
     if (plugin.uninstall) {
-      const ctx: PluginContext = {
-        view,
-        options: opts,
-        backend: be,
-        getState<T>(id: string): T | undefined {
-          return pluginStates.get(id) as T | undefined;
-        },
-        setState<T>(id: string, state: T): void {
-          pluginStates.set(id, state);
-        },
-      };
-      plugin.uninstall(ctx);
+      plugin.uninstall(makeContext());
     }
     activePlugins.delete(pluginId);
     pluginStates.delete(pluginId);
+  }
+
+  // ── 安装默认插件集 ──
+  const defaultPlugins = getDefaultPlugins(opts);
+  const initialExtensions: any[] = [];
+
+  for (const plugin of defaultPlugins) {
+    if (activePlugins.has(plugin.id)) continue;
+    const ctx = makeContext();
+    const ext = plugin.install(ctx);
+    if (ext) {
+      const exts = Array.isArray(ext) ? ext : [ext];
+      initialExtensions.push(...exts);
+    }
+    activePlugins.set(plugin.id, plugin);
+  }
+
+  // 用完整的初始扩展创建 state（避免逐个 dispatch 的性能损耗）
+  const fullState = EditorState.create({
+    doc: opts.doc || '',
+    extensions: initialExtensions,
+  });
+  view.setState(fullState);
+
+  // ── 后初始化：强制语法树重建 ──
+  (function forceRebuild() {
+    const { syntaxTree, Transaction } = (window as any).__cm6;
+    view.dispatch({ annotations: Transaction.addToHistory.of(false) });
+    const tree = syntaxTree(view.state);
+    if (tree.length < view.state.doc.length) {
+      setTimeout(forceRebuild, 50);
+    }
+  })();
+
+  // ── registerSuggest 语法糖 ──
+  function registerSuggest(config: SuggestConfig): () => void {
+    const suggestState = pluginStates.get('suggest') as { addProvider: (p: CompletionProvider) => () => void } | undefined;
+    if (!suggestState) {
+      console.warn('registerSuggest: suggest plugin not installed. Call editor.use(suggestPlugin) first.');
+      return () => {};
+    }
+    const provider: CompletionProvider = {
+      id: `suggest-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      trigger: config.trigger,
+      getSuggestions: config.getSuggestions,
+      onAccept: config.onAccept,
+      suffix: config.suffix,
+    };
+    return suggestState.addProvider(provider);
   }
 
   // ── 返回实例 ──
@@ -164,17 +162,17 @@ export function createEditor(
       return view.state.doc.sliceString(from, to);
     },
     destroy() {
+      // Uninstall all plugins in reverse order
+      const ids = [...activePlugins.keys()].reverse();
+      for (const id of ids) unuse(id);
       view.destroy();
-      editorEl.innerHTML = '';
-      activePlugins.clear();
+      container.innerHTML = '';
       pluginStates.clear();
     },
     focus() { view.focus(); },
     use,
     unuse,
-    registerSuggest(config: SuggestConfig) {
-      return createSuggest(view, config);
-    },
+    registerSuggest,
   };
 
   return instance;
