@@ -20,7 +20,7 @@ export function createTableTheme(EditorView: any) {
     },
     // Separator 行 — 非编辑态：暗淡融入背景
     '.cm-table-separator': {
-      backgroundColor: 'var(--table-separator-bg, rgba(80, 120, 200, 0.04))',
+      backgroundColor: 'transparent',
       color: 'var(--text-faint)',
     },
     // Separator 行 — 编辑态：比正常文本淡
@@ -30,20 +30,20 @@ export function createTableTheme(EditorView: any) {
     },
     // 数据行交替
     '.cm-table-row-even': {
-      backgroundColor: 'var(--table-row-even-bg, rgba(80, 140, 220, 0.06))',
+      backgroundColor: 'transparent',
     },
     '.cm-table-row-odd': {
-      backgroundColor: 'var(--table-row-odd-bg, rgba(80, 140, 220, 0.12))',
+      backgroundColor: 'var(--table-row-odd-bg, rgba(80, 140, 220, 0.08))',
     },
     // 编辑态：更淡
     '.cm-table-active.cm-table-header': {
       backgroundColor: 'rgba(80, 120, 200, 0.10)',
     },
     '.cm-table-active.cm-table-row-even': {
-      backgroundColor: 'rgba(80, 140, 220, 0.04)',
+      backgroundColor: 'transparent',
     },
     '.cm-table-active.cm-table-row-odd': {
-      backgroundColor: 'rgba(80, 140, 220, 0.08)',
+      backgroundColor: 'rgba(80, 140, 220, 0.05)',
     },
     // 复制按钮（与 code-block-flair 风格统一）
     '.cm-table-copy-btn': {
