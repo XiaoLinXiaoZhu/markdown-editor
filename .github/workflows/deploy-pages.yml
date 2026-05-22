@@ -30,6 +30,9 @@ jobs:
       - name: Build core package
         run: cd packages/core && bun run build
 
+      - name: Link vendor assets for web app
+        run: ln -s ../../../packages/core/vendor apps/web/public/vendor
+
       - name: Build demo app
         run: cd apps/web && bun run build
         env:
