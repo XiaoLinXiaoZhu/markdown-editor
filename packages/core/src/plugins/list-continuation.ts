@@ -12,10 +12,10 @@ export const listContinuationPlugin: EditorPlugin = {
   id: 'list-continuation',
 
   install(ctx: PluginContext) {
-    const { keymap } = (window as any).__cm6;
+    const { keymap, Prec } = (window as any).__cm6;
     const __newlineAndIndent = (window as any).__commands?.newlineAndIndent;
 
-    return keymap.of([
+    return Prec.high(keymap.of([
       {
         key: 'Enter',
         run(v: any) {
@@ -71,6 +71,6 @@ export const listContinuationPlugin: EditorPlugin = {
         },
         preventDefault: true,
       },
-    ]);
+    ]));
   },
 };
