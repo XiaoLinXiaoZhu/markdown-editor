@@ -46,8 +46,6 @@ _n0n_exec_*
 # reference
 ref/
 
-# Dev app vendor copy
-apps/web/public/vendor/
 
 # npm auth
 .npmrc
