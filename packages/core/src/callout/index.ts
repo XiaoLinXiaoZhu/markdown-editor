@@ -90,17 +90,16 @@ export function createCalloutExtension() {
           );
 
           if (lineNum === callout.firstLine && !isLineActive) {
-            // Non-active first line: replace `> [!TYPE] ` with header widget
+            // Non-active first line: replace entire content with header widget
             const text = line.text;
-            const match = text.match(/^>\s*\[!\w+\]\s*/);
+            const match = text.match(/^>\s*\[!\w+\]\s*(.*)?$/);
             if (match) {
-              const syntaxEnd = line.from + match[0].length;
-              const remaining = text.slice(match[0].length).trim();
-              const label = remaining ? '' : capitalizeFirst(callout.type);
+              const title = match[1]?.trim();
+              const label = title || capitalizeFirst(callout.type);
               builder.push(
                 Decoration.replace({
                   widget: new CalloutHeaderWidget(callout.type, label),
-                }).range(line.from, syntaxEnd)
+                }).range(line.from, line.to)
               );
             }
           } else if (lineNum !== callout.firstLine && !isLineActive) {
