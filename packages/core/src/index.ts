@@ -23,7 +23,6 @@ export type {
   EditorBackend,
   EditorOptions,
   EditorInstance,
-  EditorMode,
   EditorPlugin,
   PluginContext,
   LinkTarget,

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { createEditor } from '@xlxz/markdown-editor';
-import type { EditorInstance, EditorBackend, EditorMode } from '@xlxz/markdown-editor';
+import type { EditorInstance, EditorBackend } from '@xlxz/markdown-editor';
 import demoDoc from './demo-doc.md?raw';
 
 const editorContainer = ref<HTMLElement>();
@@ -10,7 +10,6 @@ const status = ref<{ text: string; state: 'loading' | 'ok' | 'err' }>({
   state: 'loading',
 });
 const callbackLog = ref('');
-const currentMode = ref<EditorMode>('ir');
 const currentTheme = ref<'dark' | 'light'>('dark');
 
 let editor: EditorInstance | null = null;
@@ -39,12 +38,6 @@ function setCallbackLog(msg: string) {
     callbackLog.value = '';
     callbackTimer = null;
   }, 3000);
-}
-
-function switchMode(mode: EditorMode) {
-  if (!editor) return;
-  editor.setMode(mode);
-  currentMode.value = mode;
 }
 
 function switchTheme(theme: 'dark' | 'light') {
@@ -134,24 +127,6 @@ onMounted(() => {
 <template>
   <div id="toolbar">
     <span class="title">@xlxz/markdown-editor</span>
-
-    <div class="btn-group">
-      <button
-        :class="{ active: currentMode === 'ir' }"
-        @click="switchMode('ir')"
-        title="即时渲染 (Live Preview)"
-      >IR</button>
-      <button
-        :class="{ active: currentMode === 'raw' }"
-        @click="switchMode('raw')"
-        title="源码模式 (Source)"
-      >RAW</button>
-      <button
-        :class="{ active: currentMode === 'view' }"
-        @click="switchMode('view')"
-        title="阅读模式 (Reading)"
-      >VIEW</button>
-    </div>
 
     <div class="btn-group">
       <button

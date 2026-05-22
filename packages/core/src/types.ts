@@ -131,8 +131,6 @@ export interface AutoLoadOptions {
 
 // ─── 编辑器实例 ───
 
-export type EditorMode = 'ir' | 'raw' | 'view';
-
 export interface EditorInstance {
   /** CodeMirror EditorView 实例 */
   readonly view: any;
@@ -154,8 +152,4 @@ export interface EditorInstance {
   registerSuggest(config: SuggestConfig): () => void;
   /** 切换主题 */
   setTheme(theme: 'dark' | 'light'): void;
-  /** 切换编辑模式：ir=即时渲染, raw=源码, view=阅读 */
-  setMode(mode: EditorMode): void;
-  /** 获取当前模式 */
-  getMode(): EditorMode;
 }
