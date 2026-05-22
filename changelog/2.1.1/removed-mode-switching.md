@@ -1,0 +1,1 @@
+`EditorMode` type, `editor.setMode()` / `editor.getMode()` API, and mode toggle UI removed — the implementation was fundamentally incorrect (Obsidian uses a separate MarkdownPreviewRenderer for reading mode, not a CM6 reconfiguration)

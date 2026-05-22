@@ -6,6 +6,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Generated from `
 
 ---
 
+## [2.1.1]
+
+### Removed
+
+- `EditorMode` type, `editor.setMode()` / `editor.getMode()` API, and mode toggle UI removed — the implementation was fundamentally incorrect (Obsidian uses a separate MarkdownPreviewRenderer for reading mode, not a CM6 reconfiguration)
+
+---
+
 ## [2.1.0]
 
 ### Added
