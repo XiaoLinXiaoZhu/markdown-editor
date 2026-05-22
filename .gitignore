@@ -47,3 +47,6 @@ ref/
 
 # npm auth
 .npmrc
+
+# Junction (SSOT is packages/core/vendor/)
+apps/web/public/vendor/
