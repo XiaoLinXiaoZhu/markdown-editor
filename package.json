@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "changelog": "bun run scripts/build-changelog.ts",
-    "prepare": "husky"
+    "prepare": "husky",
+    "scope-css": "bun run scripts/scope-vendor-css.ts"
   },
   "workspaces": [
     "packages/core",
