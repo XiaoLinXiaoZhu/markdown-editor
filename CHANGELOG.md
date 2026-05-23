@@ -6,6 +6,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Generated from `
 
 ---
 
+## [2.2.1]
+
+### Fixed
+
+- `vendor/app.css` global element selectors (`button`, `input`, `select`, `textarea`, `body`, `*`) no longer pollute host application styles. Added build-time CSS scoping via `scripts/scope-vendor-css.ts` and runtime class tagging (`ob-styled`) in `enhance.js`. Users should now reference `vendor/app.scoped.css` instead of `vendor/app.css`.
+
+---
+
 ## [2.2.0]
 
 ### Added
