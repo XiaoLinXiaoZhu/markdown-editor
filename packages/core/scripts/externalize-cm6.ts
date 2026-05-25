@@ -11,7 +11,7 @@
 
 import { readFileSync, writeFileSync } from 'fs';
 
-const INPUT = 'vendor/obsidian-app.patched.js';
+const INPUT = '../../ref/public/vendor/obsidian-app.patched.js';
 const OUTPUT = 'vendor/obsidian-app.cm6-external.js';
 const MAPPING_FILE = 'e2e/coverage/output/cm6-var-mapping.json';
 
