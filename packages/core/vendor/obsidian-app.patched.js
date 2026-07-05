@@ -92059,6 +92059,7 @@ ${a}`);
       newlineAndIndent: Bg
     };
     window.__listRegex = Jf;
+    window.__nodeProps = { hmdCodeblock: mp, hmdIndentedCode: fp };
     var CH = function (e) {
       function t(t, n) {
         var i = e.call(this, t) || this;
